@@ -60,6 +60,7 @@
 		]
 	},
 	"dependencies": {
-		"@ai-hero/sandcastle": "^0.1.6"
+		"@ai-hero/sandcastle": "^0.1.6",
+		"effect": "^3.21.0"
 	}
 }
