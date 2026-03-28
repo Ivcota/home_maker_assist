@@ -120,7 +120,51 @@
 					</div>
 				</div>
 
-				<!-- Phase 3: AI Assistant — NEXT -->
+				<!-- Phase 3: Restock — COMPLETE -->
+				<div class="relative flex gap-6 sm:gap-8">
+					<div class="relative flex-shrink-0">
+						<div
+							class="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#6b8f71] shadow-[0_0_0_4px_#f8f6f3,0_0_0_6px_#6b8f7166]"
+						>
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="20 6 9 17 4 12" />
+							</svg>
+						</div>
+					</div>
+					<div class="flex-1 pb-2">
+						<div class="mb-1 flex flex-wrap items-center gap-3">
+							<h2 class="font-[Cormorant_Garamond,serif] text-3xl font-bold text-[#1a1714]">
+								Phase 3: Restock
+							</h2>
+							<span
+								class="rounded-full bg-[#6b8f71] px-3 py-0.5 text-xs font-semibold tracking-wide text-white"
+							>
+								COMPLETE
+							</span>
+						</div>
+						<p class="mb-6 text-sm leading-relaxed text-[#7a756e]">
+							Know what needs replacing — automatic restock suggestions based on expiration, with a
+							check-off workflow and store links.
+						</p>
+
+						<div class="grid gap-3 sm:grid-cols-2">
+							{#each [
+								'Expiration-based restock suggestions',
+								'Restock checklist UI',
+								'Check-off with trash old / replace flow',
+								'Walmart shopping links',
+								'Configurable expiration rules'
+							] as label}
+								<div class="flex items-center gap-3 rounded-lg border border-[#e8e2d9] bg-white px-4 py-3">
+									<span class="h-2 w-2 flex-shrink-0 rounded-full bg-[#6b8f71]"></span>
+									<span class="text-sm text-[#3a3632]">{label}</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				</div>
+
+				<!-- Phase 4: AI Assistant — NEXT -->
 				<div class="relative flex gap-6 sm:gap-8">
 					<div class="relative flex-shrink-0">
 						<div
@@ -132,7 +176,7 @@
 					<div class="flex-1 pb-2">
 						<div class="mb-1 flex flex-wrap items-center gap-3">
 							<h2 class="font-[Cormorant_Garamond,serif] text-3xl font-bold text-[#3a3632]">
-								Phase 3: AI Assistant
+								Phase 4: AI Assistant
 							</h2>
 							<span
 								class="rounded-full border border-[#c4a46a40] px-3 py-0.5 text-xs font-semibold tracking-wide text-[#8a8279]"
@@ -146,7 +190,7 @@
 					</div>
 				</div>
 
-				<!-- Phase 4: MCP & Integrations -->
+				<!-- Phase 5: MCP & Integrations -->
 				<div class="relative flex gap-6 sm:gap-8">
 					<div class="relative flex-shrink-0">
 						<div
@@ -158,7 +202,7 @@
 					<div class="flex-1 pb-2">
 						<div class="mb-4">
 							<h2 class="font-[Cormorant_Garamond,serif] text-3xl font-bold text-[#5a5248]">
-								Phase 4: MCP & Integrations
+								Phase 5: MCP & Integrations
 							</h2>
 						</div>
 						<p class="text-sm leading-relaxed text-[#8a8279]">
