@@ -1,5 +1,5 @@
 import { Layer, Effect } from 'effect';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, isNotNull, gte } from 'drizzle-orm';
 import { FoodItemRepository } from '$lib/domain/inventory/food-item-repository.js';
 import { FoodItemRepositoryError, FoodItemNotFoundError } from '$lib/domain/inventory/errors.js';
 import type { FoodItem } from '$lib/domain/inventory/food-item.js';
@@ -94,6 +94,79 @@ export const DrizzleFoodItemRepository = Layer.effect(
 						catch: (e) =>
 							new FoodItemRepositoryError({ message: 'Failed to update food item', cause: e })
 					});
+				}),
+			trash: (userId, id) =>
+				Effect.gen(function* () {
+					const rows = yield* Effect.tryPromise({
+						try: () =>
+							db
+								.select()
+								.from(foodItem)
+								.where(and(eq(foodItem.id, id), eq(foodItem.userId, userId), isNull(foodItem.trashedAt))),
+						catch: (e) =>
+							new FoodItemRepositoryError({ message: 'Failed to find food item', cause: e })
+					});
+
+					if (rows.length === 0) {
+						return yield* Effect.fail(new FoodItemNotFoundError({ id }));
+					}
+
+					yield* Effect.tryPromise({
+						try: () =>
+							db
+								.update(foodItem)
+								.set({ trashedAt: new Date(), updatedAt: new Date() })
+								.where(and(eq(foodItem.id, id), eq(foodItem.userId, userId))),
+						catch: (e) =>
+							new FoodItemRepositoryError({ message: 'Failed to trash food item', cause: e })
+					});
+				}),
+			restore: (userId, id) =>
+				Effect.gen(function* () {
+					const rows = yield* Effect.tryPromise({
+						try: () =>
+							db
+								.select()
+								.from(foodItem)
+								.where(
+									and(eq(foodItem.id, id), eq(foodItem.userId, userId), isNotNull(foodItem.trashedAt))
+								),
+						catch: (e) =>
+							new FoodItemRepositoryError({ message: 'Failed to find trashed food item', cause: e })
+					});
+
+					if (rows.length === 0) {
+						return yield* Effect.fail(new FoodItemNotFoundError({ id }));
+					}
+
+					yield* Effect.tryPromise({
+						try: () =>
+							db
+								.update(foodItem)
+								.set({ trashedAt: null, updatedAt: new Date() })
+								.where(and(eq(foodItem.id, id), eq(foodItem.userId, userId))),
+						catch: (e) =>
+							new FoodItemRepositoryError({ message: 'Failed to restore food item', cause: e })
+					});
+				}),
+			findTrashed: (userId) =>
+				Effect.tryPromise({
+					try: () => {
+						const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+						return db
+							.select()
+							.from(foodItem)
+							.where(
+								and(
+									eq(foodItem.userId, userId),
+									isNotNull(foodItem.trashedAt),
+									gte(foodItem.trashedAt, windowStart)
+								)
+							)
+							.then((rows) => rows.map(rowToFoodItem));
+					},
+					catch: (e) =>
+						new FoodItemRepositoryError({ message: 'Failed to fetch trashed food items', cause: e })
 				})
 		};
 	})

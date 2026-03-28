@@ -1,7 +1,14 @@
 import { Effect } from 'effect';
 import { FoodItemRepository } from './food-item-repository.js';
-import { FoodItemValidationError, FoodItemRepositoryError, FoodItemNotFoundError } from './errors.js';
+import {
+	FoodItemValidationError,
+	FoodItemRepositoryError,
+	FoodItemNotFoundError,
+	FoodItemRestoreExpiredError
+} from './errors.js';
 import type { FoodItem, CreateFoodItemInput, UpdateFoodItemInput } from './food-item.js';
+
+export const RESTORE_WINDOW_HOURS = 24;
 
 export const createFoodItem = (
 	userId: string,
@@ -68,4 +75,41 @@ export const updateFoodItem = (
 		yield* validateFoodItemFields(input);
 		const repo = yield* FoodItemRepository;
 		return yield* repo.update(userId, input);
+	});
+
+export const trashFoodItem = (
+	userId: string,
+	id: number
+): Effect.Effect<void, FoodItemRepositoryError | FoodItemNotFoundError, FoodItemRepository> =>
+	Effect.gen(function* () {
+		const repo = yield* FoodItemRepository;
+		yield* repo.trash(userId, id);
+	});
+
+export const restoreFoodItem = (
+	userId: string,
+	id: number,
+	trashedAt: Date,
+	now: Date = new Date()
+): Effect.Effect<
+	void,
+	FoodItemRepositoryError | FoodItemNotFoundError | FoodItemRestoreExpiredError,
+	FoodItemRepository
+> =>
+	Effect.gen(function* () {
+		const msElapsed = now.getTime() - trashedAt.getTime();
+		const hoursElapsed = msElapsed / (1000 * 60 * 60);
+		if (hoursElapsed > RESTORE_WINDOW_HOURS) {
+			yield* Effect.fail(new FoodItemRestoreExpiredError({ id }));
+		}
+		const repo = yield* FoodItemRepository;
+		yield* repo.restore(userId, id);
+	});
+
+export const findTrashedFoodItems = (
+	userId: string
+): Effect.Effect<FoodItem[], FoodItemRepositoryError, FoodItemRepository> =>
+	Effect.gen(function* () {
+		const repo = yield* FoodItemRepository;
+		return yield* repo.findTrashed(userId);
 	});

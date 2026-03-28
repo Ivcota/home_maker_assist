@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { Effect, Layer } from 'effect';
 import { FoodItemRepository } from './food-item-repository.js';
-import { createFoodItem, findAllFoodItems, updateFoodItem } from './use-cases.js';
-import { FoodItemValidationError, FoodItemNotFoundError } from './errors.js';
+import {
+	createFoodItem,
+	findAllFoodItems,
+	updateFoodItem,
+	trashFoodItem,
+	restoreFoodItem,
+	RESTORE_WINDOW_HOURS
+} from './use-cases.js';
+import { FoodItemValidationError, FoodItemNotFoundError, FoodItemRestoreExpiredError } from './errors.js';
 import type { FoodItem } from './food-item.js';
 
 const TEST_USER_ID = 'user-1';
@@ -29,6 +36,9 @@ const makeRepo = (overrides: Partial<typeof FoodItemRepository.Service> = {}) =>
 		create: () => Effect.succeed(makeFoodItem()),
 		findAll: () => Effect.succeed([]),
 		update: () => Effect.succeed(makeFoodItem()),
+		trash: () => Effect.succeed(undefined as void),
+		restore: () => Effect.succeed(undefined as void),
+		findTrashed: () => Effect.succeed([]),
 		...overrides
 	});
 
@@ -245,5 +255,49 @@ describe('domain/inventory', () => {
 
 		expect(result).toBeInstanceOf(FoodItemNotFoundError);
 		expect((result as FoodItemNotFoundError).id).toBe(99);
+	});
+
+	it('trashFoodItem delegates to repository', async () => {
+		const result = await Effect.runPromise(
+			trashFoodItem(TEST_USER_ID, 1).pipe(Effect.provide(makeRepo()))
+		);
+		expect(result).toBeUndefined();
+	});
+
+	it('restoreFoodItem succeeds when trashed within window', async () => {
+		const now = new Date();
+		const trashedAt = new Date(now.getTime() - (RESTORE_WINDOW_HOURS - 1) * 60 * 60 * 1000);
+
+		const result = await Effect.runPromise(
+			restoreFoodItem(TEST_USER_ID, 1, trashedAt, now).pipe(Effect.provide(makeRepo()))
+		);
+		expect(result).toBeUndefined();
+	});
+
+	it('restoreFoodItem fails with FoodItemRestoreExpiredError when window has passed', async () => {
+		const now = new Date();
+		const trashedAt = new Date(now.getTime() - (RESTORE_WINDOW_HOURS + 1) * 60 * 60 * 1000);
+
+		const result = await Effect.runPromise(
+			restoreFoodItem(TEST_USER_ID, 1, trashedAt, now).pipe(
+				Effect.provide(makeRepo()),
+				Effect.flip
+			)
+		);
+		expect(result).toBeInstanceOf(FoodItemRestoreExpiredError);
+		expect((result as FoodItemRestoreExpiredError).id).toBe(1);
+	});
+
+	it('restoreFoodItem fails exactly at the boundary (24h elapsed)', async () => {
+		const now = new Date();
+		const trashedAt = new Date(now.getTime() - RESTORE_WINDOW_HOURS * 60 * 60 * 1000 - 1);
+
+		const result = await Effect.runPromise(
+			restoreFoodItem(TEST_USER_ID, 1, trashedAt, now).pipe(
+				Effect.provide(makeRepo()),
+				Effect.flip
+			)
+		);
+		expect(result).toBeInstanceOf(FoodItemRestoreExpiredError);
 	});
 });
