@@ -3,6 +3,7 @@ import { Effect, Layer } from 'effect';
 import { FoodItemRepository } from './food-item-repository.js';
 import {
 	createFoodItem,
+	createFoodItems,
 	findAllFoodItems,
 	updateFoodItem,
 	trashFoodItem,
@@ -36,6 +37,7 @@ const makeFoodItem = (overrides: Partial<FoodItem> = {}): FoodItem => ({
 const makeRepo = (overrides: Partial<typeof FoodItemRepository.Service> = {}) =>
 	Layer.succeed(FoodItemRepository, {
 		create: () => Effect.succeed(makeFoodItem()),
+		bulkCreate: () => Effect.succeed([]),
 		findAll: () => Effect.succeed([]),
 		update: () => Effect.succeed(makeFoodItem()),
 		trash: () => Effect.succeed(undefined as void),
@@ -301,6 +303,49 @@ describe('domain/inventory', () => {
 			)
 		);
 		expect(result).toBeInstanceOf(FoodItemRestoreExpiredError);
+	});
+
+	it('createFoodItems delegates to repository when all items are valid', async () => {
+		const item1 = makeFoodItem({ id: 1, name: 'Milk' });
+		const item2 = makeFoodItem({ id: 2, name: 'Eggs', quantity: 12 });
+		const created = [item1, item2];
+
+		const result = await Effect.runPromise(
+			createFoodItems(TEST_USER_ID, [
+				{ name: 'Milk', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 2, expirationDate: null },
+				{ name: 'Eggs', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 12, expirationDate: null }
+			]).pipe(Effect.provide(makeRepo({ bulkCreate: () => Effect.succeed(created) })))
+		);
+
+		expect(result).toEqual(created);
+	});
+
+	it('createFoodItems fails with FoodItemValidationError when one item has an empty name', async () => {
+		const result = await Effect.runPromise(
+			createFoodItems(TEST_USER_ID, [
+				{ name: 'Milk', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 2, expirationDate: null },
+				{ name: '', storageLocation: 'pantry', trackingType: 'count', amount: null, quantity: 1, expirationDate: null }
+			]).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/empty/i);
+	});
+
+	it('createFoodItems fails on first invalid item and does not call bulkCreate', async () => {
+		let bulkCreateCalled = false;
+
+		const result = await Effect.runPromise(
+			createFoodItems(TEST_USER_ID, [
+				{ name: 'Bad Item', storageLocation: 'pantry', trackingType: 'amount', amount: 150, quantity: null, expirationDate: null }
+			]).pipe(
+				Effect.provide(makeRepo({ bulkCreate: () => { bulkCreateCalled = true; return Effect.succeed([]); } })),
+				Effect.flip
+			)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect(bulkCreateCalled).toBe(false);
 	});
 });
 

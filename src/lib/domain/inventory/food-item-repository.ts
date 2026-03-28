@@ -7,6 +7,10 @@ export interface FoodItemRepository {
 		userId: string,
 		input: CreateFoodItemInput
 	): Effect.Effect<FoodItem, FoodItemRepositoryError>;
+	bulkCreate(
+		userId: string,
+		items: CreateFoodItemInput[]
+	): Effect.Effect<FoodItem[], FoodItemRepositoryError>;
 	findAll(userId: string): Effect.Effect<FoodItem[], FoodItemRepositoryError>;
 	update(
 		userId: string,

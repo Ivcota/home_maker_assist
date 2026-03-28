@@ -46,6 +46,29 @@ export const DrizzleFoodItemRepository = Layer.effect(
 					catch: (e) =>
 						new FoodItemRepositoryError({ message: 'Failed to create food item', cause: e })
 				}),
+			bulkCreate: (userId, items) =>
+				Effect.tryPromise({
+					try: () =>
+						db.transaction((tx) =>
+							tx
+								.insert(foodItem)
+								.values(
+									items.map((item) => ({
+										userId,
+										name: item.name,
+										storageLocation: item.storageLocation,
+										trackingType: item.trackingType,
+										amount: item.amount !== null ? String(item.amount) : null,
+										quantity: item.quantity,
+										expirationDate: item.expirationDate
+									}))
+								)
+								.returning()
+								.then((rows) => rows.map(rowToFoodItem))
+						),
+					catch: (e) =>
+						new FoodItemRepositoryError({ message: 'Failed to bulk create food items', cause: e })
+				}),
 			findAll: (userId) =>
 				Effect.tryPromise({
 					try: () =>

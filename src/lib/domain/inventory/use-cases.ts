@@ -10,6 +10,18 @@ import type { FoodItem, CreateFoodItemInput, UpdateFoodItemInput } from './food-
 
 export const RESTORE_WINDOW_HOURS = 24;
 
+export const createFoodItems = (
+	userId: string,
+	inputs: CreateFoodItemInput[]
+): Effect.Effect<FoodItem[], FoodItemValidationError | FoodItemRepositoryError, FoodItemRepository> =>
+	Effect.gen(function* () {
+		for (const input of inputs) {
+			yield* validateFoodItemFields(input);
+		}
+		const repo = yield* FoodItemRepository;
+		return yield* repo.bulkCreate(userId, inputs);
+	});
+
 export const createFoodItem = (
 	userId: string,
 	input: CreateFoodItemInput
