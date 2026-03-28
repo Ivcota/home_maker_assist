@@ -10,8 +10,24 @@
 
 	let activeTab = $state<TabId>('all');
 	let addTrackingType = $state('count');
+	let addStorageLocation = $derived<StorageLocation>(
+		activeTab === 'all' || activeTab === 'trash' ? 'pantry' : activeTab
+	);
+	let addName = $state('');
+	let addAmount = $state('');
+	let addQuantity = $state('1');
+	let addExpirationDate = $state('');
 	let editingId = $state<number | null>(null);
 	let editTrackingType = $state('count');
+
+	function resetAddForm() {
+		addName = '';
+		addTrackingType = 'count';
+		addAmount = '';
+		addQuantity = '1';
+		addExpirationDate = '';
+		// addStorageLocation stays derived from activeTab — no reset needed
+	}
 
 	// Toast state
 	interface Toast {
@@ -500,12 +516,22 @@
 				</p>
 			{/if}
 
-			<!-- Add Item Form -->
+			<!-- Add Item Form (Quick-add mode: stays open, clears after save) -->
 			<section class="rounded-xl border border-[#e8e2d9] bg-white p-6 sm:p-8">
 				<h3 class="mb-4 font-[Cormorant_Garamond,serif] text-lg font-bold text-[#1a1714]">
 					Add Item
 				</h3>
-				<form method="post" action="?/create" use:enhance class="flex flex-col gap-4">
+				<form
+					method="post"
+					action="?/create"
+					use:enhance={() => {
+						return ({ result, update }) => {
+							if (result.type !== 'failure') resetAddForm();
+							update({ reset: false });
+						};
+					}}
+					class="flex flex-col gap-4"
+				>
 					<!-- Name -->
 					<div class="flex flex-col gap-1.5">
 						<label for="name" class="text-sm font-medium text-[#3a3632]">Name</label>
@@ -513,6 +539,7 @@
 							id="name"
 							type="text"
 							name="name"
+							bind:value={addName}
 							required
 							placeholder="e.g. Milk, Eggs, Pasta"
 							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] placeholder:text-[#b5aea4] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
@@ -520,7 +547,7 @@
 					</div>
 
 					<div class="grid grid-cols-2 gap-4">
-						<!-- Storage location -->
+						<!-- Storage location — pre-selects from active tab, stays after save -->
 						<div class="flex flex-col gap-1.5">
 							<label for="storageLocation" class="text-sm font-medium text-[#3a3632]">
 								Storage Location
@@ -528,7 +555,7 @@
 							<select
 								id="storageLocation"
 								name="storageLocation"
-								value={activeTab === 'all' ? 'pantry' : activeTab}
+								value={addStorageLocation}
 								class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 							>
 								<option value="pantry">Pantry</option>
@@ -564,6 +591,7 @@
 								name="amount"
 								min="0"
 								max="100"
+								bind:value={addAmount}
 								placeholder="0–100"
 								class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 							/>
@@ -576,7 +604,7 @@
 								type="number"
 								name="quantity"
 								min="1"
-								value="1"
+								bind:value={addQuantity}
 								class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 							/>
 						</div>
@@ -591,6 +619,7 @@
 							id="expirationDate"
 							type="date"
 							name="expirationDate"
+							bind:value={addExpirationDate}
 							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						/>
 					</div>
