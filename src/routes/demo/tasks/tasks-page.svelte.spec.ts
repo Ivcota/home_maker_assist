@@ -23,4 +23,38 @@ describe('/demo/tasks page', () => {
 		await expect.element(page.getByText('Buy milk')).toBeInTheDocument();
 		await expect.element(page.getByText('Walk dog')).toBeInTheDocument();
 	});
+
+	it('renders complete and remove buttons for each task', async () => {
+		const tasks = [
+			{ id: 1, title: 'Buy milk', priority: 2, completedAt: null },
+			{ id: 2, title: 'Walk dog', priority: 1, completedAt: null }
+		];
+
+		render(TasksPage, { data: { tasks }, form: null });
+
+		const completeButtons = page.getByRole('button', { name: /mark as complete/i });
+		await expect.element(completeButtons.nth(0)).toBeInTheDocument();
+		await expect.element(completeButtons.nth(1)).toBeInTheDocument();
+
+		const removeButtons = page.getByRole('button', { name: /remove task/i });
+		await expect.element(removeButtons.nth(0)).toBeInTheDocument();
+		await expect.element(removeButtons.nth(1)).toBeInTheDocument();
+	});
+
+	it('completed tasks render with visual distinction', async () => {
+		const tasks = [
+			{ id: 1, title: 'Done task', priority: 1, completedAt: new Date() },
+			{ id: 2, title: 'Pending task', priority: 1, completedAt: null }
+		];
+
+		render(TasksPage, { data: { tasks }, form: null });
+
+		// Completed task title has line-through styling
+		const doneTitle = page.getByText('Done task');
+		await expect.element(doneTitle).toHaveClass('line-through');
+
+		// Pending task title does not have line-through
+		const pendingTitle = page.getByText('Pending task');
+		await expect.element(pendingTitle).not.toHaveClass('line-through');
+	});
 });
