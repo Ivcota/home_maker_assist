@@ -1,0 +1,51 @@
+import { Effect } from 'effect';
+import { FoodItemRepository } from './food-item-repository.js';
+import { FoodItemValidationError, FoodItemRepositoryError } from './errors.js';
+import type { FoodItem, CreateFoodItemInput } from './food-item.js';
+
+export const createFoodItem = (
+	userId: string,
+	input: CreateFoodItemInput
+): Effect.Effect<FoodItem, FoodItemValidationError | FoodItemRepositoryError, FoodItemRepository> =>
+	Effect.gen(function* () {
+		if (!input.name.trim()) {
+			yield* Effect.fail(
+				new FoodItemValidationError({ message: 'Name must not be empty' })
+			);
+		}
+
+		if (input.trackingType === 'amount') {
+			if (input.amount === null) {
+				yield* Effect.fail(
+					new FoodItemValidationError({ message: 'Amount is required when tracking type is amount' })
+				);
+			} else if (input.amount < 0 || input.amount > 100) {
+				yield* Effect.fail(
+					new FoodItemValidationError({ message: 'Amount must be between 0 and 100' })
+				);
+			}
+		}
+
+		if (input.trackingType === 'count') {
+			if (input.quantity === null) {
+				yield* Effect.fail(
+					new FoodItemValidationError({ message: 'Quantity is required when tracking type is count' })
+				);
+			} else if (input.quantity < 1) {
+				yield* Effect.fail(
+					new FoodItemValidationError({ message: 'Quantity must be at least 1' })
+				);
+			}
+		}
+
+		const repo = yield* FoodItemRepository;
+		return yield* repo.create(userId, input);
+	});
+
+export const findAllFoodItems = (
+	userId: string
+): Effect.Effect<FoodItem[], FoodItemRepositoryError, FoodItemRepository> =>
+	Effect.gen(function* () {
+		const repo = yield* FoodItemRepository;
+		return yield* repo.findAll(userId);
+	});

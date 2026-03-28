@@ -1,0 +1,193 @@
+import { describe, it, expect } from 'vitest';
+import { Effect, Layer } from 'effect';
+import { FoodItemRepository } from './food-item-repository.js';
+import { createFoodItem, findAllFoodItems } from './use-cases.js';
+import { FoodItemValidationError } from './errors.js';
+import type { FoodItem } from './food-item.js';
+
+const TEST_USER_ID = 'user-1';
+
+const now = new Date();
+
+const makeFoodItem = (overrides: Partial<FoodItem> = {}): FoodItem => ({
+	id: 1,
+	userId: TEST_USER_ID,
+	name: 'Milk',
+	storageLocation: 'fridge',
+	trackingType: 'count',
+	amount: null,
+	quantity: 2,
+	expirationDate: null,
+	trashedAt: null,
+	createdAt: now,
+	updatedAt: now,
+	...overrides
+});
+
+const makeRepo = (overrides: Partial<typeof FoodItemRepository.Service> = {}) =>
+	Layer.succeed(FoodItemRepository, {
+		create: () => Effect.succeed(makeFoodItem()),
+		findAll: () => Effect.succeed([]),
+		...overrides
+	});
+
+describe('domain/inventory', () => {
+	it('createFoodItem delegates to repository on valid input', async () => {
+		const created = makeFoodItem({ name: 'Eggs', quantity: 12 });
+
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Eggs',
+				storageLocation: 'fridge',
+				trackingType: 'count',
+				amount: null,
+				quantity: 12,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo({ create: () => Effect.succeed(created) })))
+		);
+
+		expect(result).toEqual(created);
+	});
+
+	it('findAllFoodItems returns items from repository', async () => {
+		const items = [makeFoodItem({ id: 1 }), makeFoodItem({ id: 2, name: 'Cheese' })];
+
+		const result = await Effect.runPromise(
+			findAllFoodItems(TEST_USER_ID).pipe(
+				Effect.provide(makeRepo({ findAll: () => Effect.succeed(items) }))
+			)
+		);
+
+		expect(result).toEqual(items);
+	});
+
+	it('createFoodItem fails with FoodItemValidationError for empty name', async () => {
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: '',
+				storageLocation: 'pantry',
+				trackingType: 'count',
+				amount: null,
+				quantity: 1,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/empty/i);
+	});
+
+	it('createFoodItem fails when amount is out of range (> 100)', async () => {
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Olive Oil',
+				storageLocation: 'pantry',
+				trackingType: 'amount',
+				amount: 150,
+				quantity: null,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/0 and 100/i);
+	});
+
+	it('createFoodItem fails when amount is negative', async () => {
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Olive Oil',
+				storageLocation: 'pantry',
+				trackingType: 'amount',
+				amount: -5,
+				quantity: null,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/0 and 100/i);
+	});
+
+	it('createFoodItem fails when amount is missing for amount tracking type', async () => {
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Olive Oil',
+				storageLocation: 'pantry',
+				trackingType: 'amount',
+				amount: null,
+				quantity: null,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/amount is required/i);
+	});
+
+	it('createFoodItem fails when quantity is less than 1', async () => {
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Eggs',
+				storageLocation: 'fridge',
+				trackingType: 'count',
+				amount: null,
+				quantity: 0,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/at least 1/i);
+	});
+
+	it('createFoodItem fails when quantity is missing for count tracking type', async () => {
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Eggs',
+				storageLocation: 'fridge',
+				trackingType: 'count',
+				amount: null,
+				quantity: null,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/quantity is required/i);
+	});
+
+	it('createFoodItem accepts valid amount of 0', async () => {
+		const created = makeFoodItem({ trackingType: 'amount', amount: 0, quantity: null });
+
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Olive Oil',
+				storageLocation: 'pantry',
+				trackingType: 'amount',
+				amount: 0,
+				quantity: null,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo({ create: () => Effect.succeed(created) })))
+		);
+
+		expect(result).toEqual(created);
+	});
+
+	it('createFoodItem accepts valid amount of 100', async () => {
+		const created = makeFoodItem({ trackingType: 'amount', amount: 100, quantity: null });
+
+		const result = await Effect.runPromise(
+			createFoodItem(TEST_USER_ID, {
+				name: 'Olive Oil',
+				storageLocation: 'pantry',
+				trackingType: 'amount',
+				amount: 100,
+				quantity: null,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo({ create: () => Effect.succeed(created) })))
+		);
+
+		expect(result).toEqual(created);
+	});
+});
