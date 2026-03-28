@@ -7,7 +7,9 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let activeTab = $state<'all' | StorageLocation>('all');
-	let trackingType = $state('count');
+	let addTrackingType = $state('count');
+	let editingId = $state<number | null>(null);
+	let editTrackingType = $state('count');
 
 	const tabs: { id: 'all' | StorageLocation; label: string }[] = [
 		{ id: 'all', label: 'All' },
@@ -38,6 +40,16 @@
 		'expiring-soon': 'Expiring soon',
 		expired: 'Expired'
 	};
+
+	function startEdit(item: (typeof data.items)[number]) {
+		editingId = item.id;
+		editTrackingType = item.trackingType;
+	}
+
+	function toDateInputValue(date: Date | null): string {
+		if (!date) return '';
+		return new Date(date).toISOString().split('T')[0];
+	}
 </script>
 
 <svelte:head>
@@ -102,41 +114,197 @@
 						{@const status = item.expirationDate
 							? getExpirationStatus(new Date(item.expirationDate))
 							: null}
-						<article
-							class="rounded-xl border border-[#e8e2d9] bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-[#c4a46a66]"
-						>
-							<div class="mb-1 flex items-start justify-between gap-2">
-								<h3 class="font-[Cormorant_Garamond,serif] text-lg font-bold text-[#1a1714]">
-									{item.name}
-								</h3>
-								<span
-									class="shrink-0 rounded-full border border-[#e8e2d9] px-2 py-0.5 text-xs font-medium capitalize text-[#8a8279]"
+
+						{#if editingId === item.id}
+							<!-- Edit form -->
+							<article class="rounded-xl border border-[#c4a46a66] bg-white p-6 shadow-sm">
+								<form
+									method="post"
+									action="?/update"
+									use:enhance={() => {
+										return ({ result, update }) => {
+											if (result.type !== 'failure') editingId = null;
+											update();
+										};
+									}}
+									class="flex flex-col gap-3"
 								>
-									{item.storageLocation}
-								</span>
-							</div>
+									<input type="hidden" name="id" value={item.id} />
 
-							<p class="mb-3 text-xs font-medium tracking-[0.1em] text-[#8a8279]">
-								{#if item.trackingType === 'amount'}
-									{item.amount !== null ? `${item.amount}% remaining` : 'Amount not set'}
-								{:else}
-									{item.quantity !== null ? `Qty: ${item.quantity}` : 'Quantity not set'}
-								{/if}
-							</p>
+									<div class="flex flex-col gap-1">
+										<label for="edit-name-{item.id}" class="text-xs font-medium text-[#3a3632]"
+											>Name</label
+										>
+										<input
+											id="edit-name-{item.id}"
+											type="text"
+											name="name"
+											value={item.name}
+											required
+											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+										/>
+									</div>
 
-							{#if item.expirationDate && status}
-								<div class="flex items-center gap-2">
-									<span
-										class="rounded-full border px-2 py-0.5 text-xs font-medium {statusColors[status]}"
-									>
-										{statusLabels[status]}
-									</span>
-									<span class="text-xs text-[#8a8279]">
-										{new Date(item.expirationDate).toLocaleDateString()}
-									</span>
+									<div class="grid grid-cols-2 gap-2">
+										<div class="flex flex-col gap-1">
+											<label for="edit-loc-{item.id}" class="text-xs font-medium text-[#3a3632]"
+												>Location</label
+											>
+											<select
+												id="edit-loc-{item.id}"
+												name="storageLocation"
+												value={item.storageLocation}
+												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+											>
+												<option value="pantry">Pantry</option>
+												<option value="fridge">Fridge</option>
+												<option value="freezer">Freezer</option>
+											</select>
+										</div>
+
+										<div class="flex flex-col gap-1">
+											<label for="edit-type-{item.id}" class="text-xs font-medium text-[#3a3632]"
+												>Track by</label
+											>
+											<select
+												id="edit-type-{item.id}"
+												name="trackingType"
+												bind:value={editTrackingType}
+												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+											>
+												<option value="count">Count (qty)</option>
+												<option value="amount">Amount (%)</option>
+											</select>
+										</div>
+									</div>
+
+									{#if editTrackingType === 'amount'}
+										<div class="flex flex-col gap-1">
+											<label for="edit-amount-{item.id}" class="text-xs font-medium text-[#3a3632]"
+												>Amount (%)</label
+											>
+											<input
+												id="edit-amount-{item.id}"
+												type="number"
+												name="amount"
+												min="0"
+												max="100"
+												value={item.amount ?? ''}
+												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+											/>
+										</div>
+									{:else}
+										<div class="flex flex-col gap-1">
+											<label for="edit-qty-{item.id}" class="text-xs font-medium text-[#3a3632]"
+												>Quantity</label
+											>
+											<input
+												id="edit-qty-{item.id}"
+												type="number"
+												name="quantity"
+												min="1"
+												value={item.quantity ?? 1}
+												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+											/>
+										</div>
+									{/if}
+
+									<div class="flex flex-col gap-1">
+										<label
+											for="edit-expiry-{item.id}"
+											class="text-xs font-medium text-[#3a3632]">Expiry date</label
+										>
+										<input
+											id="edit-expiry-{item.id}"
+											type="date"
+											name="expirationDate"
+											value={toDateInputValue(item.expirationDate)}
+											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+										/>
+									</div>
+
+									<div class="flex gap-2">
+										<button
+											type="submit"
+											class="flex-1 rounded-lg bg-[#c4a46a] px-3 py-2 text-xs font-semibold text-[#1a1714] transition-colors hover:bg-[#d4b87a]"
+										>
+											Save
+										</button>
+										<button
+											type="button"
+											onclick={() => (editingId = null)}
+											class="flex-1 rounded-lg border border-[#ddd6cc] px-3 py-2 text-xs font-medium text-[#8a8279] transition-colors hover:bg-[#f0ebe4]"
+										>
+											Cancel
+										</button>
+									</div>
+
+									{#if form?.message}
+										<p class="text-xs text-red-600">{form.message}</p>
+									{/if}
+								</form>
+							</article>
+						{:else}
+							<!-- View card -->
+							<article
+								class="group rounded-xl border border-[#e8e2d9] bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-[#c4a46a66]"
+							>
+								<div class="mb-1 flex items-start justify-between gap-2">
+									<h3 class="font-[Cormorant_Garamond,serif] text-lg font-bold text-[#1a1714]">
+										{item.name}
+									</h3>
+									<div class="flex shrink-0 items-center gap-1">
+										<span
+											class="rounded-full border border-[#e8e2d9] px-2 py-0.5 text-xs font-medium capitalize text-[#8a8279]"
+										>
+											{item.storageLocation}
+										</span>
+										<button
+											type="button"
+											onclick={() => startEdit(item)}
+											aria-label="Edit {item.name}"
+											class="flex h-6 w-6 items-center justify-center rounded-full text-[#b5aea4] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#f0ebe4] hover:text-[#3a3632]"
+										>
+											<svg
+												width="12"
+												height="12"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2.5"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												aria-hidden="true"
+											>
+												<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+												<path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+											</svg>
+										</button>
+									</div>
 								</div>
-							{/if}
-						</article>
+
+								<p class="mb-3 text-xs font-medium tracking-[0.1em] text-[#8a8279]">
+									{#if item.trackingType === 'amount'}
+										{item.amount !== null ? `${item.amount}% remaining` : 'Amount not set'}
+									{:else}
+										{item.quantity !== null ? `Qty: ${item.quantity}` : 'Quantity not set'}
+									{/if}
+								</p>
+
+								{#if item.expirationDate && status}
+									<div class="flex items-center gap-2">
+										<span
+											class="rounded-full border px-2 py-0.5 text-xs font-medium {statusColors[status]}"
+										>
+											{statusLabels[status]}
+										</span>
+										<span class="text-xs text-[#8a8279]">
+											{new Date(item.expirationDate).toLocaleDateString()}
+										</span>
+									</div>
+								{/if}
+							</article>
+						{/if}
 					{/each}
 				</div>
 			</section>
@@ -189,7 +357,7 @@
 						<select
 							id="trackingType"
 							name="trackingType"
-							bind:value={trackingType}
+							bind:value={addTrackingType}
 							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						>
 							<option value="count">Count (qty)</option>
@@ -199,7 +367,7 @@
 				</div>
 
 				<!-- Amount or Quantity -->
-				{#if trackingType === 'amount'}
+				{#if addTrackingType === 'amount'}
 					<div class="flex flex-col gap-1.5">
 						<label for="amount" class="text-sm font-medium text-[#3a3632]">
 							Amount remaining (%)

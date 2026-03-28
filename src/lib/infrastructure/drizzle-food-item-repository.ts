@@ -1,7 +1,7 @@
 import { Layer, Effect } from 'effect';
 import { and, eq, isNull } from 'drizzle-orm';
 import { FoodItemRepository } from '$lib/domain/inventory/food-item-repository.js';
-import { FoodItemRepositoryError } from '$lib/domain/inventory/errors.js';
+import { FoodItemRepositoryError, FoodItemNotFoundError } from '$lib/domain/inventory/errors.js';
 import type { FoodItem } from '$lib/domain/inventory/food-item.js';
 import { Database } from './database.js';
 import { foodItem } from '$lib/server/db/schema';
@@ -56,6 +56,44 @@ export const DrizzleFoodItemRepository = Layer.effect(
 							.then((rows) => rows.map(rowToFoodItem)),
 					catch: (e) =>
 						new FoodItemRepositoryError({ message: 'Failed to fetch food items', cause: e })
+				}),
+			update: (userId, input) =>
+				Effect.gen(function* () {
+					const rows = yield* Effect.tryPromise({
+						try: () =>
+							db
+								.select()
+								.from(foodItem)
+								.where(
+									and(eq(foodItem.id, input.id), eq(foodItem.userId, userId), isNull(foodItem.trashedAt))
+								),
+						catch: (e) =>
+							new FoodItemRepositoryError({ message: 'Failed to find food item', cause: e })
+					});
+
+					if (rows.length === 0) {
+						return yield* Effect.fail(new FoodItemNotFoundError({ id: input.id }));
+					}
+
+					return yield* Effect.tryPromise({
+						try: () =>
+							db
+								.update(foodItem)
+								.set({
+									name: input.name,
+									storageLocation: input.storageLocation,
+									trackingType: input.trackingType,
+									amount: input.amount !== null ? String(input.amount) : null,
+									quantity: input.quantity,
+									expirationDate: input.expirationDate,
+									updatedAt: new Date()
+								})
+								.where(and(eq(foodItem.id, input.id), eq(foodItem.userId, userId)))
+								.returning()
+								.then((rows) => rowToFoodItem(rows[0])),
+						catch: (e) =>
+							new FoodItemRepositoryError({ message: 'Failed to update food item', cause: e })
+					});
 				})
 		};
 	})

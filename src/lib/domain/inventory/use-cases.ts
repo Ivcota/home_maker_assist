@@ -1,19 +1,36 @@
 import { Effect } from 'effect';
 import { FoodItemRepository } from './food-item-repository.js';
-import { FoodItemValidationError, FoodItemRepositoryError } from './errors.js';
-import type { FoodItem, CreateFoodItemInput } from './food-item.js';
+import { FoodItemValidationError, FoodItemRepositoryError, FoodItemNotFoundError } from './errors.js';
+import type { FoodItem, CreateFoodItemInput, UpdateFoodItemInput } from './food-item.js';
 
 export const createFoodItem = (
 	userId: string,
 	input: CreateFoodItemInput
 ): Effect.Effect<FoodItem, FoodItemValidationError | FoodItemRepositoryError, FoodItemRepository> =>
 	Effect.gen(function* () {
-		if (!input.name.trim()) {
-			yield* Effect.fail(
-				new FoodItemValidationError({ message: 'Name must not be empty' })
-			);
-		}
+		yield* validateFoodItemFields(input);
+		const repo = yield* FoodItemRepository;
+		return yield* repo.create(userId, input);
+	});
 
+export const findAllFoodItems = (
+	userId: string
+): Effect.Effect<FoodItem[], FoodItemRepositoryError, FoodItemRepository> =>
+	Effect.gen(function* () {
+		const repo = yield* FoodItemRepository;
+		return yield* repo.findAll(userId);
+	});
+
+function validateFoodItemFields(input: {
+	name: string;
+	trackingType: string;
+	amount: number | null;
+	quantity: number | null;
+}): Effect.Effect<void, FoodItemValidationError> {
+	return Effect.gen(function* () {
+		if (!input.name.trim()) {
+			yield* Effect.fail(new FoodItemValidationError({ message: 'Name must not be empty' }));
+		}
 		if (input.trackingType === 'amount') {
 			if (input.amount === null) {
 				yield* Effect.fail(
@@ -25,7 +42,6 @@ export const createFoodItem = (
 				);
 			}
 		}
-
 		if (input.trackingType === 'count') {
 			if (input.quantity === null) {
 				yield* Effect.fail(
@@ -37,15 +53,19 @@ export const createFoodItem = (
 				);
 			}
 		}
-
-		const repo = yield* FoodItemRepository;
-		return yield* repo.create(userId, input);
 	});
+}
 
-export const findAllFoodItems = (
-	userId: string
-): Effect.Effect<FoodItem[], FoodItemRepositoryError, FoodItemRepository> =>
+export const updateFoodItem = (
+	userId: string,
+	input: UpdateFoodItemInput
+): Effect.Effect<
+	FoodItem,
+	FoodItemValidationError | FoodItemRepositoryError | FoodItemNotFoundError,
+	FoodItemRepository
+> =>
 	Effect.gen(function* () {
+		yield* validateFoodItemFields(input);
 		const repo = yield* FoodItemRepository;
-		return yield* repo.findAll(userId);
+		return yield* repo.update(userId, input);
 	});

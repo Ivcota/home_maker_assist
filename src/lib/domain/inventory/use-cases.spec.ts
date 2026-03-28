@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { Effect, Layer } from 'effect';
 import { FoodItemRepository } from './food-item-repository.js';
-import { createFoodItem, findAllFoodItems } from './use-cases.js';
-import { FoodItemValidationError } from './errors.js';
+import { createFoodItem, findAllFoodItems, updateFoodItem } from './use-cases.js';
+import { FoodItemValidationError, FoodItemNotFoundError } from './errors.js';
 import type { FoodItem } from './food-item.js';
 
 const TEST_USER_ID = 'user-1';
@@ -28,6 +28,7 @@ const makeRepo = (overrides: Partial<typeof FoodItemRepository.Service> = {}) =>
 	Layer.succeed(FoodItemRepository, {
 		create: () => Effect.succeed(makeFoodItem()),
 		findAll: () => Effect.succeed([]),
+		update: () => Effect.succeed(makeFoodItem()),
 		...overrides
 	});
 
@@ -189,5 +190,60 @@ describe('domain/inventory', () => {
 		);
 
 		expect(result).toEqual(created);
+	});
+
+	it('updateFoodItem delegates to repository on valid input', async () => {
+		const updated = makeFoodItem({ name: 'Oat Milk', storageLocation: 'pantry' });
+
+		const result = await Effect.runPromise(
+			updateFoodItem(TEST_USER_ID, {
+				id: 1,
+				name: 'Oat Milk',
+				storageLocation: 'pantry',
+				trackingType: 'count',
+				amount: null,
+				quantity: 2,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo({ update: () => Effect.succeed(updated) })))
+		);
+
+		expect(result).toEqual(updated);
+	});
+
+	it('updateFoodItem applies same validation as createFoodItem', async () => {
+		const result = await Effect.runPromise(
+			updateFoodItem(TEST_USER_ID, {
+				id: 1,
+				name: '',
+				storageLocation: 'fridge',
+				trackingType: 'count',
+				amount: null,
+				quantity: 1,
+				expirationDate: null
+			}).pipe(Effect.provide(makeRepo()), Effect.flip)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemValidationError);
+		expect((result as FoodItemValidationError).message).toMatch(/empty/i);
+	});
+
+	it('updateFoodItem propagates FoodItemNotFoundError', async () => {
+		const result = await Effect.runPromise(
+			updateFoodItem(TEST_USER_ID, {
+				id: 99,
+				name: 'Ghost Item',
+				storageLocation: 'fridge',
+				trackingType: 'count',
+				amount: null,
+				quantity: 1,
+				expirationDate: null
+			}).pipe(
+				Effect.provide(makeRepo({ update: () => Effect.fail(new FoodItemNotFoundError({ id: 99 })) })),
+				Effect.flip
+			)
+		);
+
+		expect(result).toBeInstanceOf(FoodItemNotFoundError);
+		expect((result as FoodItemNotFoundError).id).toBe(99);
 	});
 });

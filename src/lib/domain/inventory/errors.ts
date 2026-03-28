@@ -8,3 +8,7 @@ export class FoodItemRepositoryError extends Data.TaggedError('FoodItemRepositor
 	message: string;
 	cause?: unknown;
 }> {}
+
+export class FoodItemNotFoundError extends Data.TaggedError('FoodItemNotFoundError')<{
+	id: number;
+}> {}

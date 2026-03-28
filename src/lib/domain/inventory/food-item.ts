@@ -23,3 +23,13 @@ export interface CreateFoodItemInput {
 	quantity: number | null;
 	expirationDate: Date | null;
 }
+
+export interface UpdateFoodItemInput {
+	id: number;
+	name: string;
+	storageLocation: StorageLocation;
+	trackingType: TrackingType;
+	amount: number | null;
+	quantity: number | null;
+	expirationDate: Date | null;
+}
