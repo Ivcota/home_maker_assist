@@ -85,6 +85,17 @@
 		expired: 'Expired'
 	};
 
+	let checkedRestockIds = $state(new Set<number>());
+
+	function toggleRestock(id: number) {
+		if (checkedRestockIds.has(id)) {
+			checkedRestockIds.delete(id);
+		} else {
+			checkedRestockIds.add(id);
+		}
+		checkedRestockIds = new Set(checkedRestockIds);
+	}
+
 	function startEdit(item: FoodItem) {
 		editingId = item.id;
 		editTrackingType = item.trackingType;
@@ -239,15 +250,65 @@
 								expired: 'Expired',
 								'expiring-soon': 'Expiring soon'
 							}}
-							<li class="flex items-center gap-3 px-4 py-3">
-								<span
-									class="font-medium text-[#1a1714]"
-								>{restockItem.foodItem.name}</span>
+							{@const isChecked = checkedRestockIds.has(restockItem.foodItem.id)}
+							<li class="flex flex-wrap items-center gap-3 px-4 py-3">
+								<input
+									type="checkbox"
+									aria-label="Check off {restockItem.foodItem.name}"
+									checked={isChecked}
+									onchange={() => toggleRestock(restockItem.foodItem.id)}
+									class="h-4 w-4 cursor-pointer accent-[#c4a46a]"
+								/>
+								<span class="font-medium text-[#1a1714]">{restockItem.foodItem.name}</span>
 								<span
 									class="rounded-full border px-2 py-0.5 text-xs font-medium {statusColors[restockItem.expirationStatus]}"
 								>
 									{statusLabels[restockItem.expirationStatus]}
 								</span>
+								{#if isChecked}
+									<form
+										method="post"
+										action="?/trash"
+										use:enhance={() => {
+											return ({ result, update }) => {
+												if (result.type !== 'failure') {
+													checkedRestockIds.delete(restockItem.foodItem.id);
+												}
+												update();
+											};
+										}}
+									>
+										<input type="hidden" name="id" value={restockItem.foodItem.id} />
+										<button
+											type="submit"
+											class="rounded-lg border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+										>
+											Trash old
+										</button>
+									</form>
+									<form
+										method="post"
+										action="?/trash"
+										use:enhance={() => {
+											return ({ result, update }) => {
+												if (result.type !== 'failure') {
+													checkedRestockIds.delete(restockItem.foodItem.id);
+													addName = restockItem.foodItem.name;
+													activeTab = restockItem.foodItem.storageLocation;
+												}
+												update();
+											};
+										}}
+									>
+										<input type="hidden" name="id" value={restockItem.foodItem.id} />
+										<button
+											type="submit"
+											class="rounded-lg bg-[#c4a46a] px-3 py-1 text-xs font-semibold text-[#1a1714] hover:bg-[#d4b87a]"
+										>
+											Replace
+										</button>
+									</form>
+								{/if}
 								<a
 									href={restockItem.walmartUrl}
 									target="_blank"
