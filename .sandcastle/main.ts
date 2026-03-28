@@ -15,7 +15,7 @@ await run({
   // Maximum number of iterations (agent invocations) to run in a session.
   // Each iteration works on a single issue. Increase this to process more issues
   // per run, or set it to 1 for a single-shot mode.
-  maxIterations: 3,
+  maxIterations: 1,
 
   // The Claude model to use. Sonnet balances capability and speed for most tasks.
   // Switch to claude-opus-4-6 for harder problems, or claude-haiku-4-5 for speed.
