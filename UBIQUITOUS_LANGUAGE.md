@@ -37,6 +37,20 @@
 | **Extracted Food Item** | A Food Item parsed from a receipt image, not yet persisted to inventory             | Scanned item, parsed item     |
 | **Extracted Recipe**    | A Recipe parsed from an image, not yet persisted                                    | Scanned recipe, parsed recipe |
 
+## Shopping (new)
+
+| Term | Definition | Aliases to avoid |
+|------|-----------|-----------------|
+| **Shopping List Item** | An entry on the shopping list, sourced from either a Restock Item or a Pinned Recipe's unmatched Ingredient | Cart item, to-buy |
+| **Shopping List Source Type** | The origin of a Shopping List Item: `restock` (expired/expiring Food Item) or `recipe` (unmatched Ingredient from a Pinned Recipe) | Source, origin |
+| **Canonical Key** | A lowercased, trimmed Canonical Name used to deduplicate Shopping List Items across sources | Lookup key, slug |
+| **Checked** | Whether a Shopping List Item has been marked as purchased during a shopping trip | Bought, completed, toggled |
+| **Shopping Trip** | A shopping session that ends when the user finalizes purchases via Complete Shopping Trip | Shopping session, run |
+| **Complete Shopping Trip** | The action of finalizing a shopping session: checked restock items replace their expired originals as new Food Items, checked recipe items become new Food Items, and the shopping list is cleared | Checkout, finalize |
+| **Pinned Recipe** | A Recipe selected for meal planning by setting its `pinnedAt` timestamp; its unmatched Ingredients feed the Shopping List | Favorited recipe, selected recipe |
+| **Carried Storage Location** | The Storage Location preserved on a Shopping List Item so the resulting Food Item inherits the correct location | Default location |
+| **Carried Tracking Type** | The Tracking Type preserved on a Shopping List Item so the resulting Food Item inherits the correct measurement | Default tracking |
+
 ## Lifecycle operations
 
 | Term               | Definition                                                              | Aliases to avoid          |
@@ -62,13 +76,19 @@
 - **Recipe Readiness** is computed from the ratio of matched **Ingredients** to total **Ingredients**
 - **Receipt Scanning** produces **Extracted Food Items** that become **Food Items** when saved
 - **Recipe Scanning** produces **Extracted Recipes** that become **Recipes** when saved
+- A **Shopping List Item** is sourced from either a **Restock Item** or a **Pinned Recipe**'s unmatched **Ingredients** (new)
+- **Shopping List Items** are deduplicated by **Canonical Key** (new)
+- **Complete Shopping Trip** trashes the original expired **Food Items** and creates fresh replacements (new)
+- A **Pinned Recipe** feeds its unmatched **Ingredients** into the **Shopping List** (new)
 
-## Example dialogue
+## Example dialogue (updated)
 
 > **Dev:** "When a user scans a receipt, do the **Extracted Food Items** go straight into inventory?"
 > **Domain expert:** "No — the user reviews the **Extracted Food Items** first and can edit names, **Storage Locations**, and **Tracking Types** before saving. Only then do they become **Food Items**."
-> **Dev:** "And the **Restock** tab — does it include items with no expiration date?"
-> **Domain expert:** "No. A **Restock Item** must have an **Expiration Status** of `expired` or `expiring-soon`. Items without an expiration date are always `fresh` and never appear in Restock."
+> **Dev:** "How does the **Shopping List** get populated?"
+> **Domain expert:** "Two sources. First, any **Restock Items** — **Food Items** that are `expired` or `expiring-soon`. Second, any **Pinned Recipes** whose **Ingredients** don't match current inventory via **Canonical Name**. Both are merged into **Shopping List Items**, deduplicated by **Canonical Key**."
+> **Dev:** "What happens when the user **Completes a Shopping Trip**?"
+> **Domain expert:** "Every **Checked** restock **Shopping List Item** trashes its original expired **Food Item** and creates a fresh replacement, inheriting the **Carried Storage Location** and **Carried Tracking Type**. **Checked** recipe items also become new **Food Items**. Then the entire list is cleared."
 > **Dev:** "For **Recipe Readiness**, if I have milk in the fridge and a recipe calls for milk, how does matching work?"
 > **Domain expert:** "We compare **Canonical Names**. If the **Ingredient** and **Food Item** share the same **Canonical Name** (case-insensitive, trimmed), it counts as an **Ingredient Match**. We don't check quantity — just presence."
 
@@ -78,3 +98,5 @@
 - **"Amount" vs "Quantity"** — these are _not_ interchangeable. **Amount** is a percentage (0–100) for bulk items tracked by `amount` type. **Quantity** is a whole-number count for discrete items tracked by `count` type. A Food Item has one or the other, never both.
 - **"Trash" vs "Delete"** — **Trash** is a soft delete with a 24-hour **Restore Window**. There is no hard delete exposed to users. Code should use "trash" (not "delete") to avoid implying permanence.
 - **"Ingredient" vs "Food Item"** — An **Ingredient** exists only within a **Recipe**. A **Food Item** exists in inventory. They are linked by **Canonical Name** matching, but are distinct domain concepts with different schemas.
+- **"Checked" vs "Completed"** (new) — A **Shopping List Item** is **Checked** (marked as purchased). A **Task** is **Completed**. Don't use "completed" for shopping items or "checked" for tasks.
+- **"Pin" vs "Favorite"** (new) — A **Pinned Recipe** is selected for meal planning and directly affects the **Shopping List**. Avoid "favorite" — pinning has functional consequences beyond bookmarking.
