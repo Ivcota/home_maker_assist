@@ -4,7 +4,11 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { z } from 'zod';
 import { ReceiptScanner } from '$lib/domain/receipt/receipt-scanner.js';
-import { UnreadableImageError, NoItemsExtractedError, AIProviderError } from '$lib/domain/receipt/errors.js';
+import {
+	UnreadableImageError,
+	NoItemsExtractedError,
+	AIProviderError
+} from '$lib/domain/receipt/errors.js';
 import type { ExtractionError } from '$lib/domain/receipt/errors.js';
 import type { ExtractedFoodItem } from '$lib/domain/receipt/types.js';
 
@@ -18,7 +22,10 @@ export interface RawExtractedItem {
 	daysToExpiration: number | null;
 }
 
-export function mapRawItemToExtracted(item: RawExtractedItem, now: Date = new Date()): ExtractedFoodItem {
+export function mapRawItemToExtracted(
+	item: RawExtractedItem,
+	now: Date = new Date()
+): ExtractedFoodItem {
 	let expirationDate: Date | null = null;
 	if (item.daysToExpiration != null) {
 		const clamped = Math.max(1, Math.min(item.daysToExpiration, 730));
@@ -94,7 +101,11 @@ export const AIReceiptScanner = ReceiptScanner.of({
 								{
 									type: 'image',
 									image: input.imageBase64,
-									mediaType: input.mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+									mediaType: input.mimeType as
+										| 'image/jpeg'
+										| 'image/png'
+										| 'image/gif'
+										| 'image/webp'
 								},
 								{
 									type: 'text',

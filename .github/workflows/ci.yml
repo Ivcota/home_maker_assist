@@ -27,6 +27,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: cp .env.example .env
       - run: npm run check
 
   test:

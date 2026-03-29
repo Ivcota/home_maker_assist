@@ -91,7 +91,11 @@ export const DrizzleFoodItemRepository = Layer.effect(
 								.select()
 								.from(foodItem)
 								.where(
-									and(eq(foodItem.id, input.id), eq(foodItem.userId, userId), isNull(foodItem.trashedAt))
+									and(
+										eq(foodItem.id, input.id),
+										eq(foodItem.userId, userId),
+										isNull(foodItem.trashedAt)
+									)
 								),
 						catch: (e) =>
 							new FoodItemRepositoryError({ message: 'Failed to find food item', cause: e })
@@ -129,7 +133,9 @@ export const DrizzleFoodItemRepository = Layer.effect(
 							db
 								.select()
 								.from(foodItem)
-								.where(and(eq(foodItem.id, id), eq(foodItem.userId, userId), isNull(foodItem.trashedAt))),
+								.where(
+									and(eq(foodItem.id, id), eq(foodItem.userId, userId), isNull(foodItem.trashedAt))
+								),
 						catch: (e) =>
 							new FoodItemRepositoryError({ message: 'Failed to find food item', cause: e })
 					});
@@ -156,7 +162,11 @@ export const DrizzleFoodItemRepository = Layer.effect(
 								.select()
 								.from(foodItem)
 								.where(
-									and(eq(foodItem.id, id), eq(foodItem.userId, userId), isNotNull(foodItem.trashedAt))
+									and(
+										eq(foodItem.id, id),
+										eq(foodItem.userId, userId),
+										isNotNull(foodItem.trashedAt)
+									)
 								),
 						catch: (e) =>
 							new FoodItemRepositoryError({ message: 'Failed to find trashed food item', cause: e })

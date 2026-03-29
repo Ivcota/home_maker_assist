@@ -12,15 +12,15 @@ describe('getExpirationStatus', () => {
 	});
 
 	it('returns "fresh" when expiration is just past the threshold', () => {
-		expect(
-			getExpirationStatus(daysFromNow(EXPIRING_SOON_THRESHOLD_DAYS + 0.01, now), now)
-		).toBe('fresh');
+		expect(getExpirationStatus(daysFromNow(EXPIRING_SOON_THRESHOLD_DAYS + 0.01, now), now)).toBe(
+			'fresh'
+		);
 	});
 
 	it('returns "expiring-soon" when expiration is exactly at the threshold', () => {
-		expect(
-			getExpirationStatus(daysFromNow(EXPIRING_SOON_THRESHOLD_DAYS, now), now)
-		).toBe('expiring-soon');
+		expect(getExpirationStatus(daysFromNow(EXPIRING_SOON_THRESHOLD_DAYS, now), now)).toBe(
+			'expiring-soon'
+		);
 	});
 
 	it('returns "expiring-soon" when expiration is within threshold days', () => {

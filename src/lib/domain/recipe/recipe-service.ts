@@ -181,8 +181,7 @@ export const RecipeServiceLive = Layer.effect(
 								.where(
 									and(eq(recipe.id, input.id), eq(recipe.userId, userId), isNull(recipe.trashedAt))
 								),
-						catch: (e) =>
-							new RecipeRepositoryError({ message: 'Failed to find recipe', cause: e })
+						catch: (e) => new RecipeRepositoryError({ message: 'Failed to find recipe', cause: e })
 					});
 
 					if (rows.length === 0) {
@@ -198,9 +197,7 @@ export const RecipeServiceLive = Layer.effect(
 									.where(and(eq(recipe.id, input.id), eq(recipe.userId, userId)))
 									.returning();
 
-								await tx
-									.delete(recipeIngredient)
-									.where(eq(recipeIngredient.recipeId, input.id));
+								await tx.delete(recipeIngredient).where(eq(recipeIngredient.recipeId, input.id));
 
 								const ingredientRows =
 									input.ingredients.length > 0
@@ -233,8 +230,7 @@ export const RecipeServiceLive = Layer.effect(
 								.select()
 								.from(recipe)
 								.where(and(eq(recipe.id, id), eq(recipe.userId, userId), isNull(recipe.trashedAt))),
-						catch: (e) =>
-							new RecipeRepositoryError({ message: 'Failed to find recipe', cause: e })
+						catch: (e) => new RecipeRepositoryError({ message: 'Failed to find recipe', cause: e })
 					});
 
 					if (rows.length === 0) {
@@ -247,8 +243,7 @@ export const RecipeServiceLive = Layer.effect(
 								.update(recipe)
 								.set({ trashedAt: new Date(), updatedAt: new Date() })
 								.where(and(eq(recipe.id, id), eq(recipe.userId, userId))),
-						catch: (e) =>
-							new RecipeRepositoryError({ message: 'Failed to trash recipe', cause: e })
+						catch: (e) => new RecipeRepositoryError({ message: 'Failed to trash recipe', cause: e })
 					});
 				}),
 

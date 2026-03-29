@@ -130,7 +130,7 @@
 			>
 				<!-- Decorative corner accents -->
 				<div
-					class="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[radial-gradient(circle,#c4a46a_0%,transparent_70%)] opacity-15"
+					class="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-[radial-gradient(circle,#c4a46a_0%,transparent_70%)] opacity-15"
 				></div>
 				<div
 					class="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-[radial-gradient(circle,#c4a46a_0%,transparent_70%)] opacity-8"
@@ -140,7 +140,7 @@
 					{priorityTask.category}
 				</span>
 				<h2
-					class="mb-3 font-[Cormorant_Garamond,serif] text-3xl font-bold leading-tight text-[#f0e6d3] sm:text-4xl"
+					class="mb-3 font-[Cormorant_Garamond,serif] text-3xl leading-tight font-bold text-[#f0e6d3] sm:text-4xl"
 				>
 					{priorityTask.title}
 				</h2>
@@ -223,7 +223,7 @@
 					type="text"
 					bind:value={newTask}
 					placeholder="What needs doing?"
-					class="flex-1 rounded-lg border border-[#c4a46a26] bg-[#211f1b] px-4 py-3 text-sm text-[#e8ddd0] outline-none transition-all duration-200 placeholder:tracking-wide placeholder:text-[#6b6560] focus:border-[#c4a46a66] focus:shadow-[0_0_0_3px_rgba(196,164,106,0.08)]"
+					class="flex-1 rounded-lg border border-[#c4a46a26] bg-[#211f1b] px-4 py-3 text-sm text-[#e8ddd0] transition-all duration-200 outline-none placeholder:tracking-wide placeholder:text-[#6b6560] focus:border-[#c4a46a66] focus:shadow-[0_0_0_3px_rgba(196,164,106,0.08)]"
 					onkeydown={(e) => {
 						if (e.key === 'Enter') handleAdd();
 					}}

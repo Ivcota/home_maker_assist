@@ -7,14 +7,18 @@
 
 	const navItems = [
 		{ href: '/inventory', label: 'Inventory', icon: 'M3 7h18M3 12h18M3 17h18' },
-		{ href: '/recipes', label: 'Recipes', icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z' }
+		{
+			href: '/recipes',
+			label: 'Recipes',
+			icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z'
+		}
 	];
 </script>
 
 <div class="flex min-h-screen flex-col bg-[#f8f6f3] font-[Nunito_Sans,sans-serif]">
 	<AppHeader user={data.user} />
 	{@render children()}
-	<nav class="fixed bottom-0 left-0 right-0 z-40 border-t border-[#e8e2d9] bg-white">
+	<nav class="fixed right-0 bottom-0 left-0 z-40 border-t border-[#e8e2d9] bg-white">
 		<div class="mx-auto flex max-w-lg">
 			{#each navItems as item}
 				{@const active = page.url.pathname.startsWith(item.href)}
@@ -24,7 +28,15 @@
 						? 'text-[#5c4a2a]'
 						: 'text-[#b0a090] hover:text-[#8a7a6a]'}"
 				>
-					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
 						{#if item.label === 'Inventory'}
 							<line x1="8" y1="6" x2="21" y2="6" />
 							<line x1="8" y1="12" x2="21" y2="12" />

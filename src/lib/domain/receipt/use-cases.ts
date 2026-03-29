@@ -4,7 +4,10 @@ import type { ExtractItemsInput, ExtractedFoodItem } from './types.js';
 import type { ExtractionError } from './errors.js';
 
 function toTitleCase(str: string): string {
-	return str.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+	return str.replace(
+		/\w\S*/g,
+		(word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+	);
 }
 
 export const extractItemsFromReceipt = (

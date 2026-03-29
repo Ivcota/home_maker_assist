@@ -13,7 +13,11 @@ export const RESTORE_WINDOW_HOURS = 24;
 export const createFoodItems = (
 	userId: string,
 	inputs: CreateFoodItemInput[]
-): Effect.Effect<FoodItem[], FoodItemValidationError | FoodItemRepositoryError, FoodItemRepository> =>
+): Effect.Effect<
+	FoodItem[],
+	FoodItemValidationError | FoodItemRepositoryError,
+	FoodItemRepository
+> =>
 	Effect.gen(function* () {
 		for (const input of inputs) {
 			yield* validateFoodItemFields(input);
@@ -53,7 +57,9 @@ function validateFoodItemFields(input: {
 		if (input.trackingType === 'amount') {
 			if (input.amount === null) {
 				yield* Effect.fail(
-					new FoodItemValidationError({ message: 'Amount is required when tracking type is amount' })
+					new FoodItemValidationError({
+						message: 'Amount is required when tracking type is amount'
+					})
 				);
 			} else if (input.amount < 0 || input.amount > 100) {
 				yield* Effect.fail(
@@ -64,12 +70,12 @@ function validateFoodItemFields(input: {
 		if (input.trackingType === 'count') {
 			if (input.quantity === null) {
 				yield* Effect.fail(
-					new FoodItemValidationError({ message: 'Quantity is required when tracking type is count' })
+					new FoodItemValidationError({
+						message: 'Quantity is required when tracking type is count'
+					})
 				);
 			} else if (input.quantity < 1) {
-				yield* Effect.fail(
-					new FoodItemValidationError({ message: 'Quantity must be at least 1' })
-				);
+				yield* Effect.fail(new FoodItemValidationError({ message: 'Quantity must be at least 1' }));
 			}
 		}
 	});

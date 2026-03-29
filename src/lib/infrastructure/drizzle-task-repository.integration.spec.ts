@@ -127,7 +127,10 @@ describe.skipIf(!dbAvailable)('DrizzleTaskRepository (integration — requires P
 		const { toggled, all } = await Effect.runPromise(
 			Effect.gen(function* () {
 				const repo = yield* TaskRepository;
-				const created = yield* repo.create(USER_A, { title: 'Completed visible task', priority: 1 });
+				const created = yield* repo.create(USER_A, {
+					title: 'Completed visible task',
+					priority: 1
+				});
 				const toggled = yield* repo.toggleCompletion(USER_A, created.id);
 				const all = yield* repo.findAll(USER_A);
 				return { toggled, all };
@@ -167,7 +170,10 @@ describe.skipIf(!dbAvailable)('DrizzleTaskRepository (integration — requires P
 		const result = await Effect.runPromise(
 			Effect.gen(function* () {
 				const repo = yield* TaskRepository;
-				const createdByB = yield* repo.create(USER_B, { title: 'User B task for delete', priority: 1 });
+				const createdByB = yield* repo.create(USER_B, {
+					title: 'User B task for delete',
+					priority: 1
+				});
 				return yield* repo.softDelete(USER_A, createdByB.id).pipe(Effect.flip);
 			}).pipe(Effect.provide(testLayer))
 		);

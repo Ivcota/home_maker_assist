@@ -1,6 +1,10 @@
 <script lang="ts">
 	const prototypes: { slug: string; title: string; description: string }[] = [
-		{ slug: 'dashboard', title: 'Dashboard', description: 'Warm editorial to-do dashboard with priority hero, task cards, and quick add' },
+		{
+			slug: 'dashboard',
+			title: 'Dashboard',
+			description: 'Warm editorial to-do dashboard with priority hero, task cards, and quick add'
+		}
 	];
 </script>
 
@@ -14,8 +18,8 @@
 		<div class="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
 			<p class="text-lg font-medium text-gray-400">No prototypes yet</p>
 			<p class="mt-1 text-sm text-gray-400">
-				Add a folder under <code class="rounded bg-gray-100 px-1">src/routes/prototype/</code> and
-				register it above.
+				Add a folder under <code class="rounded bg-gray-100 px-1">src/routes/prototype/</code> and register
+				it above.
 			</p>
 		</div>
 	{:else}

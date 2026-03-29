@@ -40,7 +40,4 @@ export async function makePgliteDatabase(): Promise<DatabaseInstance> {
 	return drizzle(pg, { schema }) as unknown as DatabaseInstance;
 }
 
-export const PgliteDatabaseLive = Layer.effect(
-	Database,
-	Effect.promise(makePgliteDatabase)
-);
+export const PgliteDatabaseLive = Layer.effect(Database, Effect.promise(makePgliteDatabase));

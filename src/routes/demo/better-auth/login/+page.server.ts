@@ -57,5 +57,5 @@ export const actions: Actions = {
 		}
 
 		return redirect(302, '/demo/better-auth');
-	},
+	}
 };

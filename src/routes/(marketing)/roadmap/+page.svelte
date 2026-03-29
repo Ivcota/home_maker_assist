@@ -9,10 +9,10 @@
 			ROADMAP
 		</span>
 		<h1
-			class="mb-6 font-[Cormorant_Garamond,serif] text-5xl font-bold leading-tight text-[#f0e6d3] sm:text-6xl"
+			class="mb-6 font-[Cormorant_Garamond,serif] text-5xl leading-tight font-bold text-[#f0e6d3] sm:text-6xl"
 		>
 			Where we are.<br />
-			<em class="font-normal italic text-[#c4a46a]">Where we're going.</em>
+			<em class="font-normal text-[#c4a46a] italic">Where we're going.</em>
 		</h1>
 		<p class="text-xl leading-relaxed text-[#9a9088]">
 			KeptNow is being built in phases. Here's what's live — and what's coming next.
@@ -26,7 +26,7 @@
 		<div class="relative">
 			<!-- Vertical line -->
 			<div
-				class="absolute left-[1.1rem] top-0 h-full w-0.5 bg-gradient-to-b from-[#c4a46a] via-[#c4a46a40] to-transparent sm:left-[1.35rem]"
+				class="absolute top-0 left-[1.1rem] h-full w-0.5 bg-gradient-to-b from-[#c4a46a] via-[#c4a46a40] to-transparent sm:left-[1.35rem]"
 			></div>
 
 			<div class="space-y-16">
@@ -36,7 +36,16 @@
 						<div
 							class="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#6b8f71] shadow-[0_0_0_4px_#f8f6f3,0_0_0_6px_#6b8f7166]"
 						>
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="#fff"
+								stroke-width="2.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
 								<polyline points="20 6 9 17 4 12" />
 							</svg>
 						</div>
@@ -58,15 +67,10 @@
 						</p>
 
 						<div class="grid gap-3 sm:grid-cols-2">
-							{#each [
-								'User authentication & accounts',
-								'Task creation & management',
-								'Task completion tracking',
-								'Per-user data isolation',
-								'Marketing site & roadmap',
-								'App dashboard shell'
-							] as label}
-								<div class="flex items-center gap-3 rounded-lg border border-[#e8e2d9] bg-white px-4 py-3">
+							{#each ['User authentication & accounts', 'Task creation & management', 'Task completion tracking', 'Per-user data isolation', 'Marketing site & roadmap', 'App dashboard shell'] as label}
+								<div
+									class="flex items-center gap-3 rounded-lg border border-[#e8e2d9] bg-white px-4 py-3"
+								>
 									<span class="h-2 w-2 flex-shrink-0 rounded-full bg-[#6b8f71]"></span>
 									<span class="text-sm text-[#3a3632]">{label}</span>
 								</div>
@@ -81,7 +85,16 @@
 						<div
 							class="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#6b8f71] shadow-[0_0_0_4px_#f8f6f3,0_0_0_6px_#6b8f7166]"
 						>
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="#fff"
+								stroke-width="2.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
 								<polyline points="20 6 9 17 4 12" />
 							</svg>
 						</div>
@@ -103,15 +116,10 @@
 						</p>
 
 						<div class="grid gap-3 sm:grid-cols-2">
-							{#each [
-								'Food item tracking by storage location',
-								'Tabbed dashboard (Pantry, Fridge, Freezer)',
-								'Expiration date tracking with status indicators',
-								'Add, edit, and delete items',
-								'Trash and restore workflow',
-								'Quick-add mode for rapid entry'
-							] as label}
-								<div class="flex items-center gap-3 rounded-lg border border-[#e8e2d9] bg-white px-4 py-3">
+							{#each ['Food item tracking by storage location', 'Tabbed dashboard (Pantry, Fridge, Freezer)', 'Expiration date tracking with status indicators', 'Add, edit, and delete items', 'Trash and restore workflow', 'Quick-add mode for rapid entry'] as label}
+								<div
+									class="flex items-center gap-3 rounded-lg border border-[#e8e2d9] bg-white px-4 py-3"
+								>
 									<span class="h-2 w-2 flex-shrink-0 rounded-full bg-[#6b8f71]"></span>
 									<span class="text-sm text-[#3a3632]">{label}</span>
 								</div>
@@ -126,7 +134,16 @@
 						<div
 							class="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#6b8f71] shadow-[0_0_0_4px_#f8f6f3,0_0_0_6px_#6b8f7166]"
 						>
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="#fff"
+								stroke-width="2.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
 								<polyline points="20 6 9 17 4 12" />
 							</svg>
 						</div>
@@ -148,14 +165,10 @@
 						</p>
 
 						<div class="grid gap-3 sm:grid-cols-2">
-							{#each [
-								'Expiration-based restock suggestions',
-								'Restock checklist UI',
-								'Check-off with trash old / replace flow',
-								'Walmart shopping links',
-								'Configurable expiration rules'
-							] as label}
-								<div class="flex items-center gap-3 rounded-lg border border-[#e8e2d9] bg-white px-4 py-3">
+							{#each ['Expiration-based restock suggestions', 'Restock checklist UI', 'Check-off with trash old / replace flow', 'Walmart shopping links', 'Configurable expiration rules'] as label}
+								<div
+									class="flex items-center gap-3 rounded-lg border border-[#e8e2d9] bg-white px-4 py-3"
+								>
 									<span class="h-2 w-2 flex-shrink-0 rounded-full bg-[#6b8f71]"></span>
 									<span class="text-sm text-[#3a3632]">{label}</span>
 								</div>
@@ -185,7 +198,8 @@
 							</span>
 						</div>
 						<p class="text-sm leading-relaxed text-[#7a756e]">
-							An AI assistant grounded in your household context — not a generic chatbot. Features TBD.
+							An AI assistant grounded in your household context — not a generic chatbot. Features
+							TBD.
 						</p>
 					</div>
 				</div>

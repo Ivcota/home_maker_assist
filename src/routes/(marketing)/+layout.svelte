@@ -59,14 +59,14 @@
 
 	<!-- FOOTER -->
 	<footer class="border-t border-[#c4a46a33] bg-[#1a1714] py-10">
-		<div class="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 sm:flex-row sm:justify-between">
+		<div
+			class="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 sm:flex-row sm:justify-between"
+		>
 			<p class="text-sm text-[#6b6560]">
 				&copy; {new Date().getFullYear()} KeptNow. All rights reserved.
 			</p>
 			<div class="flex items-center gap-6">
-				<a href="/" class="text-sm text-[#8a8279] transition-colors hover:text-[#c4a46a]">
-					Home
-				</a>
+				<a href="/" class="text-sm text-[#8a8279] transition-colors hover:text-[#c4a46a]"> Home </a>
 				<a href="/about" class="text-sm text-[#8a8279] transition-colors hover:text-[#c4a46a]">
 					About
 				</a>

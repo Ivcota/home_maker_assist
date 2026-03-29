@@ -2,8 +2,16 @@
 	import { resolve } from '$app/paths';
 
 	const demos = [
-		{ href: resolve('/demo/better-auth'), title: 'Better Auth', description: 'Authentication flow with sign in & sign up' },
-		{ href: resolve('/demo/tasks'), title: 'Tasks', description: 'Task management with create, complete & delete' }
+		{
+			href: resolve('/demo/better-auth'),
+			title: 'Better Auth',
+			description: 'Authentication flow with sign in & sign up'
+		},
+		{
+			href: resolve('/demo/tasks'),
+			title: 'Tasks',
+			description: 'Task management with create, complete & delete'
+		}
 	];
 </script>
 
@@ -13,7 +21,9 @@
 			<h1 class="font-[Cormorant_Garamond,serif] text-xl font-bold tracking-wide text-[#1a1714]">
 				KeptNow
 			</h1>
-			<span class="ml-3 rounded-md bg-[#eee9e2] px-2 py-0.5 text-xs font-medium text-[#8a8279]">demos</span>
+			<span class="ml-3 rounded-md bg-[#eee9e2] px-2 py-0.5 text-xs font-medium text-[#8a8279]"
+				>demos</span
+			>
 		</div>
 	</nav>
 
@@ -31,9 +41,7 @@
 						{demo.title}
 					</h3>
 					<p class="text-sm text-[#8a8279]">{demo.description}</p>
-					<span class="mt-4 inline-block text-sm font-medium text-[#c4a46a]">
-						Open &rarr;
-					</span>
+					<span class="mt-4 inline-block text-sm font-medium text-[#c4a46a]"> Open &rarr; </span>
 				</a>
 			{/each}
 		</div>

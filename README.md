@@ -39,6 +39,7 @@ cp .env.example .env
 ```
 
 Required variables:
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `BETTER_AUTH_SECRET` - 32-character secret for auth
 - `ANTHROPIC_API_KEY` - For receipt scanning
@@ -69,15 +70,15 @@ npm run preview
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Production build |
-| `npm run check` | TypeScript & Svelte validation |
-| `npm run lint` | Prettier + ESLint |
-| `npm run format` | Auto-format code |
-| `npm run test` | Run unit tests |
-| `npm run db:push` | Push schema to database |
-| `npm run db:generate` | Generate migration files |
-| `npm run db:migrate` | Run migrations |
-| `npm run db:studio` | Open Drizzle Studio |
+| Command               | Description                    |
+| --------------------- | ------------------------------ |
+| `npm run dev`         | Start dev server               |
+| `npm run build`       | Production build               |
+| `npm run check`       | TypeScript & Svelte validation |
+| `npm run lint`        | Prettier + ESLint              |
+| `npm run format`      | Auto-format code               |
+| `npm run test`        | Run unit tests                 |
+| `npm run db:push`     | Push schema to database        |
+| `npm run db:generate` | Generate migration files       |
+| `npm run db:migrate`  | Run migrations                 |
+| `npm run db:studio`   | Open Drizzle Studio            |

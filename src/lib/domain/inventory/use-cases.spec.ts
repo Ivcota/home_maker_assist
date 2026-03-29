@@ -10,7 +10,11 @@ import {
 	restoreFoodItem,
 	RESTORE_WINDOW_HOURS
 } from './use-cases.js';
-import { FoodItemValidationError, FoodItemNotFoundError, FoodItemRestoreExpiredError } from './errors.js';
+import {
+	FoodItemValidationError,
+	FoodItemNotFoundError,
+	FoodItemRestoreExpiredError
+} from './errors.js';
 import type { FoodItem } from './food-item.js';
 import { getRestockItems } from './restock.js';
 import { DEFAULT_EXPIRATION_CONFIG } from './expiration.js';
@@ -253,7 +257,9 @@ describe('domain/inventory', () => {
 				quantity: 1,
 				expirationDate: null
 			}).pipe(
-				Effect.provide(makeRepo({ update: () => Effect.fail(new FoodItemNotFoundError({ id: 99 })) })),
+				Effect.provide(
+					makeRepo({ update: () => Effect.fail(new FoodItemNotFoundError({ id: 99 })) })
+				),
 				Effect.flip
 			)
 		);
@@ -284,10 +290,7 @@ describe('domain/inventory', () => {
 		const trashedAt = new Date(now.getTime() - (RESTORE_WINDOW_HOURS + 1) * 60 * 60 * 1000);
 
 		const result = await Effect.runPromise(
-			restoreFoodItem(TEST_USER_ID, 1, trashedAt, now).pipe(
-				Effect.provide(makeRepo()),
-				Effect.flip
-			)
+			restoreFoodItem(TEST_USER_ID, 1, trashedAt, now).pipe(Effect.provide(makeRepo()), Effect.flip)
 		);
 		expect(result).toBeInstanceOf(FoodItemRestoreExpiredError);
 		expect((result as FoodItemRestoreExpiredError).id).toBe(1);
@@ -298,10 +301,7 @@ describe('domain/inventory', () => {
 		const trashedAt = new Date(now.getTime() - RESTORE_WINDOW_HOURS * 60 * 60 * 1000 - 1);
 
 		const result = await Effect.runPromise(
-			restoreFoodItem(TEST_USER_ID, 1, trashedAt, now).pipe(
-				Effect.provide(makeRepo()),
-				Effect.flip
-			)
+			restoreFoodItem(TEST_USER_ID, 1, trashedAt, now).pipe(Effect.provide(makeRepo()), Effect.flip)
 		);
 		expect(result).toBeInstanceOf(FoodItemRestoreExpiredError);
 	});
@@ -313,8 +313,22 @@ describe('domain/inventory', () => {
 
 		const result = await Effect.runPromise(
 			createFoodItems(TEST_USER_ID, [
-				{ name: 'Milk', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 2, expirationDate: null },
-				{ name: 'Eggs', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 12, expirationDate: null }
+				{
+					name: 'Milk',
+					storageLocation: 'fridge',
+					trackingType: 'count',
+					amount: null,
+					quantity: 2,
+					expirationDate: null
+				},
+				{
+					name: 'Eggs',
+					storageLocation: 'fridge',
+					trackingType: 'count',
+					amount: null,
+					quantity: 12,
+					expirationDate: null
+				}
 			]).pipe(Effect.provide(makeRepo({ bulkCreate: () => Effect.succeed(created) })))
 		);
 
@@ -324,8 +338,22 @@ describe('domain/inventory', () => {
 	it('createFoodItems fails with FoodItemValidationError when one item has an empty name', async () => {
 		const result = await Effect.runPromise(
 			createFoodItems(TEST_USER_ID, [
-				{ name: 'Milk', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 2, expirationDate: null },
-				{ name: '', storageLocation: 'pantry', trackingType: 'count', amount: null, quantity: 1, expirationDate: null }
+				{
+					name: 'Milk',
+					storageLocation: 'fridge',
+					trackingType: 'count',
+					amount: null,
+					quantity: 2,
+					expirationDate: null
+				},
+				{
+					name: '',
+					storageLocation: 'pantry',
+					trackingType: 'count',
+					amount: null,
+					quantity: 1,
+					expirationDate: null
+				}
 			]).pipe(Effect.provide(makeRepo()), Effect.flip)
 		);
 
@@ -338,9 +366,23 @@ describe('domain/inventory', () => {
 
 		const result = await Effect.runPromise(
 			createFoodItems(TEST_USER_ID, [
-				{ name: 'Bad Item', storageLocation: 'pantry', trackingType: 'amount', amount: 150, quantity: null, expirationDate: null }
+				{
+					name: 'Bad Item',
+					storageLocation: 'pantry',
+					trackingType: 'amount',
+					amount: 150,
+					quantity: null,
+					expirationDate: null
+				}
 			]).pipe(
-				Effect.provide(makeRepo({ bulkCreate: () => { bulkCreateCalled = true; return Effect.succeed([]); } })),
+				Effect.provide(
+					makeRepo({
+						bulkCreate: () => {
+							bulkCreateCalled = true;
+							return Effect.succeed([]);
+						}
+					})
+				),
 				Effect.flip
 			)
 		);

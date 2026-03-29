@@ -13,10 +13,7 @@ export function computeScaledDimensions(
 	};
 }
 
-export async function compressImage(
-	file: File,
-	maxBytes = DEFAULT_MAX_BYTES
-): Promise<File> {
+export async function compressImage(file: File, maxBytes = DEFAULT_MAX_BYTES): Promise<File> {
 	if (file.size <= maxBytes) return file;
 
 	const bitmap = await createImageBitmap(file);

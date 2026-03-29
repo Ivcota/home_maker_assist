@@ -39,7 +39,7 @@
 			class="relative mb-10 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1714] via-[#252018] to-[#2a2520] p-8 sm:p-10"
 		>
 			<div
-				class="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[radial-gradient(circle,#c4a46a_0%,transparent_70%)] opacity-15"
+				class="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-[radial-gradient(circle,#c4a46a_0%,transparent_70%)] opacity-15"
 			></div>
 			<div
 				class="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-[radial-gradient(circle,#c4a46a_0%,transparent_70%)] opacity-10"
@@ -47,7 +47,9 @@
 			<span class="mb-3 inline-block text-xs font-semibold tracking-[0.2em] text-[#c4a46a]">
 				TASKS
 			</span>
-			<h2 class="mb-3 font-[Cormorant_Garamond,serif] text-3xl font-bold leading-tight text-[#f0e6d3] sm:text-4xl">
+			<h2
+				class="mb-3 font-[Cormorant_Garamond,serif] text-3xl leading-tight font-bold text-[#f0e6d3] sm:text-4xl"
+			>
 				Your tasks
 			</h2>
 			<p class="max-w-xl text-base leading-relaxed text-[#9a9088]">
@@ -64,9 +66,7 @@
 					{#each data.tasks as task (task.id)}
 						<article
 							class="rounded-xl border bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
-								{task.completedAt
-								? 'border-[#e8e2d9] opacity-60'
-								: 'border-[#e8e2d9] hover:border-[#c4a46a66]'}"
+								{task.completedAt ? 'border-[#e8e2d9] opacity-60' : 'border-[#e8e2d9] hover:border-[#c4a46a66]'}"
 						>
 							<div class="mb-2 flex items-start justify-between gap-2">
 								<h3
@@ -153,7 +153,7 @@
 							name="title"
 							required
 							placeholder="What needs doing?"
-							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] placeholder:text-[#b5aea4] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						/>
 					</div>
 					<div class="flex w-24 flex-col gap-1.5">
@@ -164,7 +164,7 @@
 							name="priority"
 							value="1"
 							min="1"
-							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm outline-none transition-all duration-200 focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						/>
 					</div>
 				</div>

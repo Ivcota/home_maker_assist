@@ -60,9 +60,7 @@ describe('RecipeService (boundary — PGLite)', () => {
 			{ id: USER_B, name: 'User B', email: 'b@example.com' }
 		]);
 
-		testLayer = RecipeServiceLive.pipe(
-			Layer.provide(Layer.succeed(Database, db))
-		);
+		testLayer = RecipeServiceLive.pipe(Layer.provide(Layer.succeed(Database, db)));
 	});
 
 	const run = <A, E>(effect: Effect.Effect<A, E, RecipeService>) =>
@@ -113,8 +111,18 @@ describe('RecipeService (boundary — PGLite)', () => {
 		await db.insert(schema.recipe).values({ userId: USER_B, name: 'B Recipe' });
 
 		const [recipesA, recipesB] = await Promise.all([
-			run(Effect.gen(function* () { const svc = yield* RecipeService; return yield* svc.findAll(USER_A); })),
-			run(Effect.gen(function* () { const svc = yield* RecipeService; return yield* svc.findAll(USER_B); }))
+			run(
+				Effect.gen(function* () {
+					const svc = yield* RecipeService;
+					return yield* svc.findAll(USER_A);
+				})
+			),
+			run(
+				Effect.gen(function* () {
+					const svc = yield* RecipeService;
+					return yield* svc.findAll(USER_B);
+				})
+			)
 		]);
 
 		expect(recipesA).toHaveLength(1);
@@ -290,7 +298,13 @@ describe('RecipeService (boundary — PGLite)', () => {
 				.values({ userId: USER_A, name: 'Old Name' })
 				.returning();
 			await db.insert(schema.recipeIngredient).values([
-				{ recipeId: recipeRow.id, name: 'Old Ingredient', canonicalName: null, quantity: null, unit: null }
+				{
+					recipeId: recipeRow.id,
+					name: 'Old Ingredient',
+					canonicalName: null,
+					quantity: null,
+					unit: null
+				}
 			]);
 
 			const result = await run(

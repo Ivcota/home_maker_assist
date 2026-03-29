@@ -56,7 +56,15 @@ describe('mapRawItemToExtracted', () => {
 	it('passes through other fields unchanged', () => {
 		expect.assertions(5);
 		const now = new Date('2026-03-28T00:00:00.000Z');
-		const item = { ...baseItem, name: 'Chicken Breast', storageLocation: 'freezer' as const, trackingType: 'amount' as const, quantity: 2, amount: 100, daysToExpiration: 90 };
+		const item = {
+			...baseItem,
+			name: 'Chicken Breast',
+			storageLocation: 'freezer' as const,
+			trackingType: 'amount' as const,
+			quantity: 2,
+			amount: 100,
+			daysToExpiration: 90
+		};
 
 		const result = mapRawItemToExtracted(item, now);
 

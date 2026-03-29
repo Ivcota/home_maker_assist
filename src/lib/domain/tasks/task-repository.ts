@@ -9,7 +9,10 @@ export interface TaskRepository {
 		userId: string,
 		id: number
 	): Effect.Effect<Task, TaskRepositoryError | TaskNotFoundError>;
-	softDelete(userId: string, id: number): Effect.Effect<void, TaskRepositoryError | TaskNotFoundError>;
+	softDelete(
+		userId: string,
+		id: number
+	): Effect.Effect<void, TaskRepositoryError | TaskNotFoundError>;
 }
 
 export const TaskRepository = Context.GenericTag<TaskRepository>('TaskRepository');

@@ -2,7 +2,12 @@ import { fail, redirect } from '@sveltejs/kit';
 import { Effect } from 'effect';
 import type { Actions, PageServerLoad } from './$types';
 import { appRuntime } from '$lib/server/runtime';
-import { createTask, findAllTasks, toggleTaskCompletion, removeTask } from '$lib/domain/tasks/use-cases';
+import {
+	createTask,
+	findAllTasks,
+	toggleTaskCompletion,
+	removeTask
+} from '$lib/domain/tasks/use-cases';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -10,9 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	const userId = locals.user.id;
-	const tasks = await appRuntime.runPromise(
-		findAllTasks(userId).pipe(Effect.orDie)
-	);
+	const tasks = await appRuntime.runPromise(findAllTasks(userId).pipe(Effect.orDie));
 	return { tasks };
 };
 
@@ -29,8 +32,8 @@ export const actions: Actions = {
 			Effect.match(createTask(userId, { title, priority }), {
 				onFailure: (e) =>
 					e._tag === 'TaskValidationError'
-						? ({ ok: false as const, status: 400 as const, message: e.message })
-						: ({ ok: false as const, status: 500 as const, message: 'Database error' }),
+						? { ok: false as const, status: 400 as const, message: e.message }
+						: { ok: false as const, status: 500 as const, message: 'Database error' },
 				onSuccess: () => ({ ok: true as const })
 			})
 		);
@@ -51,8 +54,8 @@ export const actions: Actions = {
 			Effect.match(toggleTaskCompletion(userId, { id }), {
 				onFailure: (e) =>
 					e._tag === 'TaskNotFoundError'
-						? ({ ok: false as const, status: 404 as const, message: `Task ${e.id} not found` })
-						: ({ ok: false as const, status: 500 as const, message: 'Database error' }),
+						? { ok: false as const, status: 404 as const, message: `Task ${e.id} not found` }
+						: { ok: false as const, status: 500 as const, message: 'Database error' },
 				onSuccess: () => ({ ok: true as const })
 			})
 		);
@@ -73,8 +76,8 @@ export const actions: Actions = {
 			Effect.match(removeTask(userId, { id }), {
 				onFailure: (e) =>
 					e._tag === 'TaskNotFoundError'
-						? ({ ok: false as const, status: 404 as const, message: `Task ${e.id} not found` })
-						: ({ ok: false as const, status: 500 as const, message: 'Database error' }),
+						? { ok: false as const, status: 404 as const, message: `Task ${e.id} not found` }
+						: { ok: false as const, status: 500 as const, message: 'Database error' },
 				onSuccess: () => ({ ok: true as const })
 			})
 		);

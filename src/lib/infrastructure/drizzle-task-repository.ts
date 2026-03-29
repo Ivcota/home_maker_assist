@@ -37,8 +37,7 @@ export const DrizzleTaskRepository = Layer.effect(
 								.select()
 								.from(task)
 								.where(and(eq(task.id, id), eq(task.userId, userId), isNull(task.deletedAt))),
-						catch: (e) =>
-							new TaskRepositoryError({ message: 'Failed to find task', cause: e })
+						catch: (e) => new TaskRepositoryError({ message: 'Failed to find task', cause: e })
 					});
 
 					if (rows.length === 0) {
@@ -70,8 +69,7 @@ export const DrizzleTaskRepository = Layer.effect(
 								.select()
 								.from(task)
 								.where(and(eq(task.id, id), eq(task.userId, userId), isNull(task.deletedAt))),
-						catch: (e) =>
-							new TaskRepositoryError({ message: 'Failed to find task', cause: e })
+						catch: (e) => new TaskRepositoryError({ message: 'Failed to find task', cause: e })
 					});
 
 					if (rows.length === 0) {

@@ -27,5 +27,4 @@ export interface FoodItemRepository {
 	findTrashed(userId: string): Effect.Effect<FoodItem[], FoodItemRepositoryError>;
 }
 
-export const FoodItemRepository =
-	Context.GenericTag<FoodItemRepository>('FoodItemRepository');
+export const FoodItemRepository = Context.GenericTag<FoodItemRepository>('FoodItemRepository');

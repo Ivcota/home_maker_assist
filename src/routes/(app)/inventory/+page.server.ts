@@ -12,7 +12,11 @@ import {
 	restoreFoodItem,
 	findTrashedFoodItems
 } from '$lib/domain/inventory/use-cases';
-import type { StorageLocation, TrackingType, CreateFoodItemInput } from '$lib/domain/inventory/food-item';
+import type {
+	StorageLocation,
+	TrackingType,
+	CreateFoodItemInput
+} from '$lib/domain/inventory/food-item';
 import { getRestockItems } from '$lib/domain/inventory/restock';
 import { DEFAULT_EXPIRATION_CONFIG } from '$lib/domain/inventory/expiration';
 
@@ -34,7 +38,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 function parseItemFields(formData: FormData) {
 	const name = formData.get('name')?.toString() ?? '';
-	const storageLocation = (formData.get('storageLocation')?.toString() ?? 'pantry') as StorageLocation;
+	const storageLocation = (formData.get('storageLocation')?.toString() ??
+		'pantry') as StorageLocation;
 	const trackingType = (formData.get('trackingType')?.toString() ?? 'count') as TrackingType;
 	const amountRaw = formData.get('amount')?.toString();
 	const quantityRaw = formData.get('quantity')?.toString();
@@ -44,7 +49,15 @@ function parseItemFields(formData: FormData) {
 	const quantity = trackingType === 'count' && quantityRaw ? parseInt(quantityRaw, 10) : null;
 	const expirationDate = expirationDateRaw ? new Date(expirationDateRaw) : null;
 
-	return { name, canonicalName: null, storageLocation, trackingType, amount, quantity, expirationDate };
+	return {
+		name,
+		canonicalName: null,
+		storageLocation,
+		trackingType,
+		amount,
+		quantity,
+		expirationDate
+	};
 }
 
 export const actions: Actions = {

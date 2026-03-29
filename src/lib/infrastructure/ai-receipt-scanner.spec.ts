@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { NoObjectGeneratedError } from 'ai';
 import { classifyAIError } from './ai-receipt-scanner.js';
-import { UnreadableImageError, NoItemsExtractedError, AIProviderError } from '$lib/domain/receipt/errors.js';
+import {
+	UnreadableImageError,
+	NoItemsExtractedError,
+	AIProviderError
+} from '$lib/domain/receipt/errors.js';
 
 describe('classifyAIError', () => {
 	it('passes through NoItemsExtractedError unchanged', () => {

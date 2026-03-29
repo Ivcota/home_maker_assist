@@ -46,8 +46,22 @@ describe('DrizzleFoodItemRepository', () => {
 
 		return Effect.runPromise(
 			createFoodItems(TEST_USER_ID, [
-				{ name: 'Milk', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 2, expirationDate: null },
-				{ name: 'Eggs', storageLocation: 'fridge', trackingType: 'count', amount: null, quantity: 12, expirationDate: null }
+				{
+					name: 'Milk',
+					storageLocation: 'fridge',
+					trackingType: 'count',
+					amount: null,
+					quantity: 2,
+					expirationDate: null
+				},
+				{
+					name: 'Eggs',
+					storageLocation: 'fridge',
+					trackingType: 'count',
+					amount: null,
+					quantity: 12,
+					expirationDate: null
+				}
 			]).pipe(Effect.provide(makeDbLayer(mockDb)))
 		).then((result) => {
 			expect(result).toHaveLength(2);

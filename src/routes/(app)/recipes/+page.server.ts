@@ -77,7 +77,11 @@ export const actions: Actions = {
 						return { ok: false as const, status: 400 as const, message: e.message };
 					}
 					if (e._tag === 'RecipeNotFoundError') {
-						return { ok: false as const, status: 404 as const, message: `Recipe ${e.id} not found` };
+						return {
+							ok: false as const,
+							status: 404 as const,
+							message: `Recipe ${e.id} not found`
+						};
 					}
 					return { ok: false as const, status: 500 as const, message: 'Database error' };
 				},
@@ -123,7 +127,11 @@ export const actions: Actions = {
 			Effect.match(restoreRecipe(userId, id), {
 				onFailure: (e) => {
 					if (e._tag === 'RecipeNotFoundError') {
-						return { ok: false as const, status: 404 as const, message: `Recipe ${e.id} not found` };
+						return {
+							ok: false as const,
+							status: 404 as const,
+							message: `Recipe ${e.id} not found`
+						};
 					}
 					if (e._tag === 'RecipeRestoreExpiredError') {
 						return {

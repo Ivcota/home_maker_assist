@@ -99,10 +99,7 @@ describe('DrizzleTaskRepository', () => {
 		};
 
 		return Effect.runPromise(
-			removeTask(TEST_USER_ID, { id: 99 }).pipe(
-				Effect.provide(makeDbLayer(mockDb)),
-				Effect.flip
-			)
+			removeTask(TEST_USER_ID, { id: 99 }).pipe(Effect.provide(makeDbLayer(mockDb)), Effect.flip)
 		).then((result) => {
 			expect(result).toBeInstanceOf(TaskNotFoundError);
 			expect((result as TaskNotFoundError).id).toBe(99);

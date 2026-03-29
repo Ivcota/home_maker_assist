@@ -29,7 +29,10 @@
 		<div class="relative">
 			<button
 				type="button"
-				onclick={(e) => { e.stopPropagation(); dropdownOpen = !dropdownOpen; }}
+				onclick={(e) => {
+					e.stopPropagation();
+					dropdownOpen = !dropdownOpen;
+				}}
 				class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-[#f0ebe4]"
 			>
 				<div
@@ -58,7 +61,7 @@
 
 			{#if dropdownOpen}
 				<div
-					class="absolute right-0 top-full mt-1.5 w-56 rounded-xl border border-[#e8e2d9] bg-white py-1.5 shadow-lg"
+					class="absolute top-full right-0 mt-1.5 w-56 rounded-xl border border-[#e8e2d9] bg-white py-1.5 shadow-lg"
 					role="menu"
 					onclick={(e) => e.stopPropagation()}
 				>

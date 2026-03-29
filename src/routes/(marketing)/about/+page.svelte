@@ -9,7 +9,7 @@
 			OUR STORY
 		</span>
 		<h1
-			class="mb-8 font-[Cormorant_Garamond,serif] text-5xl font-bold leading-tight text-[#f0e6d3] sm:text-6xl"
+			class="mb-8 font-[Cormorant_Garamond,serif] text-5xl leading-tight font-bold text-[#f0e6d3] sm:text-6xl"
 		>
 			Built by someone who knows the mental load is real.
 		</h1>
@@ -23,8 +23,9 @@
 <section class="bg-[#f8f6f3] px-6 py-24">
 	<div class="mx-auto max-w-3xl">
 		<div class="prose max-w-none">
-			<p class="mb-8 text-xl leading-relaxed text-[#3a3632] font-[Cormorant_Garamond,serif] italic">
-				"I kept dropping things. Not because I was disorganized — but because no tool was built for the specific, chaotic, deeply human work of running a home."
+			<p class="mb-8 font-[Cormorant_Garamond,serif] text-xl leading-relaxed text-[#3a3632] italic">
+				"I kept dropping things. Not because I was disorganized — but because no tool was built for
+				the specific, chaotic, deeply human work of running a home."
 			</p>
 
 			<p class="mb-6 text-base leading-relaxed text-[#5a5248]">
@@ -41,10 +42,10 @@
 			</p>
 
 			<p class="mb-6 text-base leading-relaxed text-[#5a5248]">
-				KeptNow was born from the conviction that this work deserves proper tooling —
-				thoughtfully designed, quietly powerful, and built around how homes actually work. Not how
-				offices work, adapted for home use. A tool designed from scratch for the people who keep
-				households running.
+				KeptNow was born from the conviction that this work deserves proper tooling — thoughtfully
+				designed, quietly powerful, and built around how homes actually work. Not how offices work,
+				adapted for home use. A tool designed from scratch for the people who keep households
+				running.
 			</p>
 		</div>
 	</div>
@@ -56,9 +57,7 @@
 		<span class="mb-6 inline-block text-xs font-semibold tracking-[0.2em] text-[#c4a46a]">
 			THE VISION
 		</span>
-		<h2
-			class="font-[Cormorant_Garamond,serif] text-4xl font-bold text-[#f0e6d3] sm:text-5xl"
-		>
+		<h2 class="font-[Cormorant_Garamond,serif] text-4xl font-bold text-[#f0e6d3] sm:text-5xl">
 			What makes this different.
 		</h2>
 	</div>
@@ -95,9 +94,9 @@
 					Open to the tools you already use.
 				</h3>
 				<p class="text-base leading-relaxed text-[#7a756e]">
-					Through MCP and open integrations, KeptNow is designed to become the hub of your
-					domestic digital life — not a silo that demands you abandon everything else. Connect your
-					calendar, your smart home, your grocery delivery service.
+					Through MCP and open integrations, KeptNow is designed to become the hub of your domestic
+					digital life — not a silo that demands you abandon everything else. Connect your calendar,
+					your smart home, your grocery delivery service.
 				</p>
 			</div>
 
@@ -107,8 +106,8 @@
 				</h3>
 				<p class="text-base leading-relaxed text-[#7a756e]">
 					We're in early access because we believe the people who use a tool should help shape it.
-					Every feature on the roadmap exists because someone running a home needed it. Your feedback
-					is the product spec.
+					Every feature on the roadmap exists because someone running a home needed it. Your
+					feedback is the product spec.
 				</p>
 			</div>
 		</div>
