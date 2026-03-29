@@ -66,6 +66,15 @@
 		}
 	}
 
+	let tabBarEl: HTMLDivElement;
+	let showTabFade = $state(true);
+
+	function onTabScroll() {
+		if (!tabBarEl) return;
+		const { scrollLeft, scrollWidth, clientWidth } = tabBarEl;
+		showTabFade = scrollLeft + clientWidth < scrollWidth - 2;
+	}
+
 	const locationTabs: { id: TabId; label: string }[] = [
 		{ id: 'all', label: 'All' },
 		{ id: 'pantry', label: 'Pantry' },
@@ -311,34 +320,39 @@
 		</div>
 
 		<!-- Tab bar -->
-		<div class="mb-6 flex gap-1 rounded-xl border border-[#e8e2d9] bg-white p-1">
-			{#each locationTabs as tab}
-				<button
-					type="button"
-					onclick={() => (activeTab = tab.id)}
-					class="flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150
-						{activeTab === tab.id
-						? 'bg-[#1a1714] text-white shadow-sm'
-						: 'text-[#8a8279] hover:bg-[#f0ebe4] hover:text-[#3a3632]'}"
-				>
-					{tab.label}
-					{#if tab.id === 'trash' && data.trashedItems.length > 0}
-						<span
-							class="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
-						>
-							{data.trashedItems.length}
-						</span>
-					{/if}
-					{#if tab.id === 'restock' && data.restockItems.length > 0}
-						<span
-							class="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-[#1a1714]"
-							style="background-color: #c4a46a;"
-						>
-							{data.restockItems.length}
-						</span>
-					{/if}
-				</button>
-			{/each}
+		<div class="relative mb-6">
+			<div class="scrollbar-hide flex gap-1 overflow-x-auto rounded-xl border border-[#e8e2d9] bg-white p-1" bind:this={tabBarEl} onscroll={onTabScroll}>
+				{#each locationTabs as tab}
+					<button
+						type="button"
+						onclick={() => (activeTab = tab.id)}
+						class="shrink-0 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-150 sm:flex-1
+							{activeTab === tab.id
+							? 'bg-[#1a1714] text-white shadow-sm'
+							: 'text-[#8a8279] hover:bg-[#f0ebe4] hover:text-[#3a3632]'}"
+					>
+						{tab.label}
+						{#if tab.id === 'trash' && data.trashedItems.length > 0}
+							<span
+								class="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
+							>
+								{data.trashedItems.length}
+							</span>
+						{/if}
+						{#if tab.id === 'restock' && data.restockItems.length > 0}
+							<span
+								class="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-[#1a1714]"
+								style="background-color: #c4a46a;"
+							>
+								{data.restockItems.length}
+							</span>
+						{/if}
+					</button>
+				{/each}
+			</div>
+			{#if showTabFade}
+				<div class="pointer-events-none absolute top-0 right-0 bottom-0 w-8 rounded-r-xl bg-gradient-to-l from-white to-transparent"></div>
+			{/if}
 		</div>
 
 		<!-- Restock tab content -->
@@ -1039,5 +1053,12 @@
 	}
 	.scan-shimmer {
 		animation: shimmer 1.5s ease-in-out infinite;
+	}
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
 	}
 </style>
