@@ -630,7 +630,86 @@ describe('completeShoppingTrip', () => {
 			)
 		);
 
-		expect(createdInputs).toContainEqual(recipeInput);
+		// canonicalName is enriched from the shopping list item's canonicalKey
+		expect(createdInputs).toContainEqual({ ...recipeInput, canonicalName: 'flour' });
+	});
+
+	it('enriches recipe item canonicalName from shopping list canonicalKey when canonicalName is null', async () => {
+		const createdInputs: CreateFoodItemInput[] = [];
+		const recipeItemWithNullCanonical: CreateFoodItemInput = {
+			name: 'Chicken Breasts',
+			canonicalName: null,
+			storageLocation: 'fridge',
+			trackingType: 'count',
+			quantity: 1,
+			amount: null,
+			expirationDate: null
+		};
+		const recipeShoppingItem: ShoppingListItem = {
+			...baseRecipeShoppingItem,
+			canonicalKey: 'chicken',
+			displayName: 'Chicken Breasts',
+			sourceRecipeNames: ['Roast Chicken']
+		};
+
+		const shoppingListLayer = makeShoppingListRepo({
+			findAll: () => Effect.succeed([recipeShoppingItem]),
+			clearAll: () => Effect.void
+		});
+		const foodItemLayer = makeFoodItemRepo({
+			findAll: () => Effect.succeed([]),
+			bulkCreate: (_, inputs) => {
+				createdInputs.push(...inputs);
+				return Effect.succeed([]);
+			}
+		});
+
+		await Effect.runPromise(
+			completeShoppingTrip('user-a', [recipeItemWithNullCanonical]).pipe(
+				Effect.provide(Layer.merge(shoppingListLayer, foodItemLayer))
+			)
+		);
+
+		expect(createdInputs).toHaveLength(1);
+		expect(createdInputs[0].canonicalName).toBe('chicken');
+	});
+
+	it('does not overwrite a canonicalName that is already set on the input', async () => {
+		const createdInputs: CreateFoodItemInput[] = [];
+		const recipeItemWithCanonical: CreateFoodItemInput = {
+			name: 'Chicken Breasts',
+			canonicalName: 'chicken-breast',
+			storageLocation: 'fridge',
+			trackingType: 'count',
+			quantity: 1,
+			amount: null,
+			expirationDate: null
+		};
+		const recipeShoppingItem: ShoppingListItem = {
+			...baseRecipeShoppingItem,
+			canonicalKey: 'chicken',
+			displayName: 'Chicken Breasts'
+		};
+
+		const shoppingListLayer = makeShoppingListRepo({
+			findAll: () => Effect.succeed([recipeShoppingItem]),
+			clearAll: () => Effect.void
+		});
+		const foodItemLayer = makeFoodItemRepo({
+			findAll: () => Effect.succeed([]),
+			bulkCreate: (_, inputs) => {
+				createdInputs.push(...inputs);
+				return Effect.succeed([]);
+			}
+		});
+
+		await Effect.runPromise(
+			completeShoppingTrip('user-a', [recipeItemWithCanonical]).pipe(
+				Effect.provide(Layer.merge(shoppingListLayer, foodItemLayer))
+			)
+		);
+
+		expect(createdInputs[0].canonicalName).toBe('chicken-breast');
 	});
 
 	it('clears all shopping list items after processing', async () => {
@@ -713,5 +792,111 @@ describe('completeShoppingTrip', () => {
 		);
 
 		expect(trashedIds).toHaveLength(0);
+	});
+});
+
+describe('generateShoppingList after completeShoppingTrip (integration)', () => {
+	it('does not re-add recipe ingredients that were just purchased when canonicalName differs from display name', async () => {
+		// Simulates the bug scenario: ingredient has canonicalName "chicken" but displayName "Chicken Breasts"
+		// After purchasing, the food item should be found by matchIngredients using "chicken" key
+		const recipe = makeRecipe({
+			id: 1,
+			name: 'Roast Chicken',
+			ingredients: [
+				{ id: 1, recipeId: 1, name: 'Chicken Breasts', canonicalName: 'chicken', quantity: null, unit: null }
+			]
+		});
+
+		// Shopping list item that was generated (canonical key is 'chicken', display name is 'Chicken Breasts')
+		const shoppingItem: ShoppingListItem = {
+			id: 5,
+			userId: 'user-a',
+			canonicalKey: 'chicken',
+			displayName: 'Chicken Breasts',
+			checked: true,
+			sourceType: 'recipe',
+			sourceRestockItemId: null,
+			sourceRecipeNames: ['Roast Chicken'],
+			carriedStorageLocation: 'fridge',
+			carriedTrackingType: 'count',
+			createdAt: now
+		};
+
+		// Client sends this input with canonicalName: null (the bug)
+		const recipeInput: CreateFoodItemInput = {
+			name: 'Chicken Breasts',
+			canonicalName: null,
+			storageLocation: 'fridge',
+			trackingType: 'count',
+			quantity: 1,
+			amount: null,
+			expirationDate: null
+		};
+
+		const createdFoodItems: FoodItem[] = [];
+
+		// Step 1: completeShoppingTrip — should enrich canonicalName to 'chicken'
+		const shoppingListRepo1 = makeShoppingListRepo({
+			findAll: () => Effect.succeed([shoppingItem]),
+			clearAll: () => Effect.void
+		});
+		const foodItemRepo1 = makeFoodItemRepo({
+			findAll: () => Effect.succeed([]),
+			bulkCreate: (_, inputs) => {
+				const created: FoodItem[] = inputs.map((input, i) => ({
+					id: 100 + i,
+					userId: 'user-a',
+					name: input.name,
+					canonicalName: input.canonicalName ?? null,
+					storageLocation: input.storageLocation,
+					trackingType: input.trackingType,
+					amount: input.amount,
+					quantity: input.quantity,
+					expirationDate: input.expirationDate,
+					trashedAt: null,
+					createdAt: now,
+					updatedAt: now
+				}));
+				createdFoodItems.push(...created);
+				return Effect.succeed(created);
+			}
+		});
+
+		await Effect.runPromise(
+			completeShoppingTrip('user-a', [recipeInput]).pipe(
+				Effect.provide(Layer.merge(shoppingListRepo1, foodItemRepo1))
+			)
+		);
+
+		// The created food item must have canonicalName: 'chicken' for the matching to work
+		expect(createdFoodItems[0].canonicalName).toBe('chicken');
+
+		// Step 2: generateShoppingList — with the created food item in inventory,
+		// 'Chicken Breasts' (canonical key 'chicken') should NOT reappear
+		let capturedRecipeItems: RecipeShoppingItemInput[] | null = null;
+
+		const shoppingListRepo2 = makeShoppingListRepo({
+			addMissingRestock: () => Effect.void,
+			mergeRecipeIngredients: (_, items) => {
+				capturedRecipeItems = items;
+				return Effect.void;
+			},
+			removeUncheckedStale: () => Effect.void,
+			findAll: () => Effect.succeed([])
+		});
+		const foodItemRepo2 = makeFoodItemRepo({
+			// Return the just-created food item (with canonicalName: 'chicken')
+			findAll: () => Effect.succeed(createdFoodItems as unknown as FoodItem[])
+		});
+		const recipeRepo2 = makeRecipeRepo({ findAll: () => Effect.succeed([recipe]) });
+
+		await Effect.runPromise(
+			generateShoppingList('user-a', now).pipe(
+				Effect.provide(Layer.mergeAll(shoppingListRepo2, foodItemRepo2, recipeRepo2))
+			)
+		);
+
+		// No recipe items should be added — the ingredient is now in inventory
+		expect(capturedRecipeItems).toBeNull();
 	});
 });

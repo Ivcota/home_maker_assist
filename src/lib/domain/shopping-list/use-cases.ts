@@ -137,7 +137,20 @@ export const completeShoppingTrip = (
 			});
 		}
 
-		const allInputs = [...restockReplacements, ...recipeItemInputs];
+		// Build a lookup from displayName -> canonicalKey for checked recipe items
+		// so we can enrich recipe inputs that arrive with canonicalName: null from the client
+		const checkedRecipeItems = allItems.filter((i) => i.checked && i.sourceType === 'recipe');
+		const recipeCanonicalKeyByName = new Map(
+			checkedRecipeItems.map((i) => [i.displayName.toLowerCase(), i.canonicalKey])
+		);
+
+		const enrichedRecipeInputs = recipeItemInputs.map((input) => ({
+			...input,
+			canonicalName:
+				input.canonicalName ?? recipeCanonicalKeyByName.get(input.name.toLowerCase()) ?? null
+		}));
+
+		const allInputs = [...restockReplacements, ...enrichedRecipeInputs];
 		if (allInputs.length > 0) {
 			yield* foodItemRepo.bulkCreate(userId, allInputs);
 		}
