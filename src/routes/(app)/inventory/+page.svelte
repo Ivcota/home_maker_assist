@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
 	import { getExpirationStatus } from '$lib/domain/inventory/expiration.js';
+	import { compressImage } from '$lib/compress-image.js';
 	import type { StorageLocation, TrackingType, FoodItem } from '$lib/domain/inventory/food-item.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -163,8 +164,17 @@
 		scanning = true;
 		scanError = null;
 
+		let imageFile: File;
+		try {
+			imageFile = await compressImage(file);
+		} catch {
+			scanError = 'Could not process this image. Try a different photo.';
+			scanning = false;
+			return;
+		}
+
 		const body = new FormData();
-		body.append('image', file);
+		body.append('image', imageFile);
 
 		try {
 			const res = await fetch('/api/scan-receipt', { method: 'POST', body });
