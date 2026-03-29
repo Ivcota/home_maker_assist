@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { Effect } from 'effect';
 import type { Actions, PageServerLoad } from './$types';
 import { appRuntime } from '$lib/server/runtime';
+import { withRequestLogging } from '$lib/server/logging';
 import {
 	generateShoppingList,
 	setShoppingListItemChecked,
@@ -11,8 +12,12 @@ import type { CreateFoodItemInput } from '$lib/domain/inventory/food-item';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = locals.user!.id;
+	const ctx = { userId, requestId: locals.requestId, route: '/shop' };
 	const items = await appRuntime.runPromise(
-		generateShoppingList(userId).pipe(Effect.orDie)
+		withRequestLogging(generateShoppingList(userId), {
+			...ctx,
+			useCase: 'generateShoppingList'
+		}).pipe(Effect.orDie)
 	);
 	return { items };
 };
@@ -22,6 +27,7 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { message: 'Unauthorized' });
 
 		const userId = locals.user.id;
+		const ctx = { userId, requestId: locals.requestId, route: '/shop' };
 		const formData = await request.formData();
 		const id = parseInt(formData.get('id')?.toString() ?? '', 10);
 		const checked = formData.get('checked') === 'true';
@@ -29,13 +35,19 @@ export const actions: Actions = {
 		if (isNaN(id)) return fail(400, { message: 'Invalid item ID' });
 
 		const outcome = await appRuntime.runPromise(
-			Effect.match(setShoppingListItemChecked(userId, id, checked), {
-				onFailure: (e) =>
-					e._tag === 'ShoppingListItemNotFoundError'
-						? { ok: false as const, status: 404 as const, message: `Item ${e.id} not found` }
-						: { ok: false as const, status: 500 as const, message: 'Database error' },
-				onSuccess: () => ({ ok: true as const })
-			})
+			Effect.match(
+				withRequestLogging(setShoppingListItemChecked(userId, id, checked), {
+					...ctx,
+					useCase: 'setShoppingListItemChecked'
+				}),
+				{
+					onFailure: (e) =>
+						e._tag === 'ShoppingListItemNotFoundError'
+							? { ok: false as const, status: 404 as const, message: `Item ${e.id} not found` }
+							: { ok: false as const, status: 500 as const, message: 'Database error' },
+					onSuccess: () => ({ ok: true as const })
+				}
+			)
 		);
 
 		if (!outcome.ok) return fail(outcome.status, { message: outcome.message });
@@ -45,6 +57,7 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { message: 'Unauthorized' });
 
 		const userId = locals.user.id;
+		const ctx = { userId, requestId: locals.requestId, route: '/shop' };
 		const formData = await request.formData();
 		const recipeItemsRaw = formData.get('recipeItemsJson')?.toString() ?? '[]';
 
@@ -63,10 +76,16 @@ export const actions: Actions = {
 		}));
 
 		const outcome = await appRuntime.runPromise(
-			Effect.match(completeShoppingTrip(userId, recipeItems), {
-				onFailure: () => ({ ok: false as const }),
-				onSuccess: () => ({ ok: true as const })
-			})
+			Effect.match(
+				withRequestLogging(completeShoppingTrip(userId, recipeItems), {
+					...ctx,
+					useCase: 'completeShoppingTrip'
+				}),
+				{
+					onFailure: () => ({ ok: false as const }),
+					onSuccess: () => ({ ok: true as const })
+				}
+			)
 		);
 
 		if (!outcome.ok) return fail(500, { message: 'Failed to complete shopping trip' });

@@ -1,6 +1,8 @@
 import { json, error } from '@sveltejs/kit';
-import { Effect, Layer } from 'effect';
+import { Effect, Layer, Logger } from 'effect';
+import { dev } from '$app/environment';
 import type { RequestHandler } from './$types';
+import { withRequestLogging } from '$lib/server/logging';
 import { extractItemsFromReceipt } from '$lib/domain/receipt/use-cases.js';
 import { AIReceiptScanner } from '$lib/infrastructure/ai-receipt-scanner.js';
 import { ReceiptScanner } from '$lib/domain/receipt/receipt-scanner.js';
@@ -23,15 +25,27 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const imageBase64 = Buffer.from(arrayBuffer).toString('base64');
 	const mimeType = imageFile.type || 'image/jpeg';
 
+	const ctx = {
+		userId: locals.user.id,
+		requestId: locals.requestId,
+		route: '/api/scan-receipt',
+		useCase: 'extractItemsFromReceipt'
+	};
+
 	const outcome = await Effect.runPromise(
 		Effect.match(
-			extractItemsFromReceipt({ imageBase64, mimeType }).pipe(Effect.provide(scannerLayer)),
+			withRequestLogging(
+				extractItemsFromReceipt({ imageBase64, mimeType }).pipe(
+					Effect.withLogSpan('ai-receipt-scan'),
+					Effect.provide(scannerLayer)
+				),
+				ctx
+			).pipe(Effect.provide(dev ? Logger.pretty : Logger.json)),
 			{
 				onFailure: (e) => {
 					if (e._tag === 'UnreadableImageError' || e._tag === 'NoItemsExtractedError') {
 						return { ok: false as const, status: 422 as const };
 					}
-					console.error(e.cause);
 					return { ok: false as const, status: 503 as const };
 				},
 				onSuccess: (items) => ({ ok: true as const, items })

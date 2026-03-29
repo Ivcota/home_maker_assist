@@ -1,4 +1,5 @@
-import { ManagedRuntime, Layer } from 'effect';
+import { ManagedRuntime, Layer, Logger } from 'effect';
+import { dev } from '$app/environment';
 import { DrizzleTaskRepository } from '$lib/infrastructure/drizzle-task-repository.js';
 import { DrizzleFoodItemRepository } from '$lib/infrastructure/drizzle-food-item-repository.js';
 import { DrizzleRecipeRepository } from '$lib/infrastructure/drizzle-recipe-repository.js';
@@ -10,6 +11,9 @@ const AppLive = Layer.mergeAll(
 	DrizzleFoodItemRepository,
 	DrizzleRecipeRepository,
 	DrizzleShoppingListRepository
-).pipe(Layer.provide(DatabaseLive));
+).pipe(
+	Layer.provide(DatabaseLive),
+	Layer.provide(dev ? Logger.pretty : Logger.json)
+);
 
 export const appRuntime = ManagedRuntime.make(AppLive);

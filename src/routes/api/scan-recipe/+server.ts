@@ -1,6 +1,8 @@
 import { json, error } from '@sveltejs/kit';
-import { Effect, Layer } from 'effect';
+import { Effect, Layer, Logger } from 'effect';
+import { dev } from '$app/environment';
 import type { RequestHandler } from './$types';
+import { withRequestLogging } from '$lib/server/logging';
 import { RecipeScanner } from '$lib/domain/recipe/recipe-scanner.js';
 import { AIRecipeScanner } from '$lib/infrastructure/ai-recipe-scanner.js';
 
@@ -22,18 +24,30 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const imageBase64 = Buffer.from(arrayBuffer).toString('base64');
 	const mimeType = imageFile.type || 'image/jpeg';
 
+	const ctx = {
+		userId: locals.user.id,
+		requestId: locals.requestId,
+		route: '/api/scan-recipe',
+		useCase: 'extractRecipes'
+	};
+
 	const outcome = await Effect.runPromise(
 		Effect.match(
-			Effect.gen(function* () {
-				const sc = yield* RecipeScanner;
-				return yield* sc.extractRecipes({ imageBase64, mimeType });
-			}).pipe(Effect.provide(scannerLayer)),
+			withRequestLogging(
+				Effect.gen(function* () {
+					const sc = yield* RecipeScanner;
+					return yield* sc.extractRecipes({ imageBase64, mimeType });
+				}).pipe(
+					Effect.withLogSpan('ai-recipe-scan'),
+					Effect.provide(scannerLayer)
+				),
+				ctx
+			).pipe(Effect.provide(dev ? Logger.pretty : Logger.json)),
 			{
 				onFailure: (e) => {
 					if (e._tag === 'UnreadableImageError' || e._tag === 'NoItemsExtractedError') {
 						return { ok: false as const, status: 422 as const };
 					}
-					console.error(e.cause);
 					return { ok: false as const, status: 503 as const };
 				},
 				onSuccess: (recipes) => ({ ok: true as const, recipes })
