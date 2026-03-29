@@ -419,7 +419,9 @@
 												if (result.type !== 'failure') {
 													checkedRestockIds.delete(restockItem.foodItem.id);
 													addName = restockItem.foodItem.name;
+													addExpirationDate = '';
 													activeTab = restockItem.foodItem.storageLocation;
+													addFormOpen = true;
 												}
 												update();
 											};
