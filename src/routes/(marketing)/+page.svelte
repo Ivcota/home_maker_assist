@@ -27,7 +27,7 @@
 		</p>
 		<div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
 			<a
-				href="/demo/better-auth/login"
+				href="/login"
 				class="rounded-lg bg-[#c4a46a] px-8 py-3.5 text-sm font-semibold tracking-wide text-[#1a1714] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#d4b87a]"
 			>
 				Get Started — It's Free
@@ -228,7 +228,7 @@
 			directly influences what we build next.
 		</p>
 		<a
-			href="/demo/better-auth/login"
+			href="/login"
 			class="rounded-lg bg-[#c4a46a] px-10 py-4 text-sm font-semibold tracking-wide text-[#1a1714] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#d4b87a]"
 		>
 			Get Started — It's Free
