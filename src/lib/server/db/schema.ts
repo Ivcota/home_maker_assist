@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, numeric, pgEnum, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, text, timestamp, numeric, pgEnum, boolean, unique } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema.js';
 
 export const storageLocationEnum = pgEnum('storage_location', ['pantry', 'fridge', 'freezer']);
@@ -71,6 +71,8 @@ export const shoppingListItem = pgTable('shopping_list_item', {
 	carriedStorageLocation: storageLocationEnum('carried_storage_location').notNull(),
 	carriedTrackingType: trackingTypeEnum('carried_tracking_type').notNull(),
 	createdAt: timestamp('created_at').notNull().defaultNow()
-});
+}, (t) => [
+	unique().on(t.userId, t.canonicalKey)
+]);
 
 export * from './auth.schema';

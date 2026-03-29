@@ -1,0 +1,1 @@
+ALTER TABLE "shopping_list_item" ADD CONSTRAINT "shopping_list_item_user_id_canonical_key_unique" UNIQUE("user_id","canonical_key");
