@@ -9,7 +9,7 @@ import {
 	updateRecipe,
 	trashRecipe,
 	restoreRecipe
-} from '$lib/domain/recipe/recipe-service';
+} from '$lib/domain/recipe/use-cases';
 import { findAllFoodItems } from '$lib/domain/inventory/use-cases';
 import type { CreateRecipeIngredientInput } from '$lib/domain/recipe/recipe';
 
