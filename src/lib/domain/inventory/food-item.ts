@@ -5,6 +5,7 @@ export interface FoodItem {
 	id: number;
 	userId: string;
 	name: string;
+	canonicalName: string | null;
 	storageLocation: StorageLocation;
 	trackingType: TrackingType;
 	amount: number | null;
@@ -17,6 +18,7 @@ export interface FoodItem {
 
 export interface CreateFoodItemInput {
 	name: string;
+	canonicalName?: string | null;
 	storageLocation: StorageLocation;
 	trackingType: TrackingType;
 	amount: number | null;
@@ -27,6 +29,7 @@ export interface CreateFoodItemInput {
 export interface UpdateFoodItemInput {
 	id: number;
 	name: string;
+	canonicalName?: string | null;
 	storageLocation: StorageLocation;
 	trackingType: TrackingType;
 	amount: number | null;

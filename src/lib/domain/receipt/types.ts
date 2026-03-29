@@ -7,6 +7,7 @@ export interface ExtractItemsInput {
 
 export interface ExtractedFoodItem {
 	name: string;
+	canonicalName: string | null;
 	storageLocation: StorageLocation;
 	trackingType: TrackingType;
 	quantity: number | null;

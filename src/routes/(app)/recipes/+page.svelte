@@ -3,10 +3,12 @@
 	import { compressImage } from '$lib/compress-image.js';
 	import type { PageData, ActionData } from './$types';
 	import type { Recipe } from '$lib/domain/recipe/recipe.js';
+	import { matchIngredients, calculateReadiness } from '$lib/domain/recipe/ingredient-matching.js';
+	import type { ReadinessStatus } from '$lib/domain/recipe/ingredient-matching.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	type TabId = 'all' | 'trash';
+	type TabId = 'all' | 'ready' | 'almost-ready' | 'need-to-shop' | 'trash';
 
 	let activeTab = $state<TabId>('all');
 
@@ -31,6 +33,9 @@
 	let editingId = $state<number | null>(null);
 	let editName = $state('');
 	let editIngredients = $state<ReviewIngredient[]>([]);
+
+	// Expanded recipe state (for detail view)
+	let expandedRecipeId = $state<number | null>(null);
 
 	// Toast state
 	interface Toast {
@@ -76,6 +81,40 @@
 				unit: i.unit
 			}))
 		)
+	);
+
+	// Readiness computed for each recipe
+	const recipeReadiness = $derived(
+		new Map(
+			data.recipes.map((recipe) => [
+				recipe.id,
+				calculateReadiness(recipe.ingredients, data.foodItems)
+			])
+		)
+	);
+
+	// Sort recipes by readiness descending (ready first)
+	const readinessOrder: Record<ReadinessStatus, number> = {
+		ready: 0,
+		'almost-ready': 1,
+		'need-to-shop': 2
+	};
+
+	const sortedRecipes = $derived(
+		[...data.recipes].sort((a, b) => {
+			const ra = recipeReadiness.get(a.id)!;
+			const rb = recipeReadiness.get(b.id)!;
+			const orderDiff = readinessOrder[ra.status] - readinessOrder[rb.status];
+			if (orderDiff !== 0) return orderDiff;
+			// Secondary sort: more matched first
+			return rb.matched / Math.max(rb.total, 1) - ra.matched / Math.max(ra.total, 1);
+		})
+	);
+
+	const filteredRecipes = $derived(
+		activeTab === 'all'
+			? sortedRecipes
+			: sortedRecipes.filter((r) => recipeReadiness.get(r.id)!.status === activeTab)
 	);
 
 	function triggerScan() {
@@ -182,6 +221,22 @@
 		const idx = editIngredients.findIndex((i) => i.localId === localId);
 		if (idx !== -1) editIngredients.splice(idx, 1);
 	}
+
+	function toggleExpanded(id: number) {
+		expandedRecipeId = expandedRecipeId === id ? null : id;
+	}
+
+	const readinessLabel: Record<ReadinessStatus, string> = {
+		ready: 'Ready to cook',
+		'almost-ready': 'Almost ready',
+		'need-to-shop': 'Need to shop'
+	};
+
+	const readinessColor: Record<ReadinessStatus, string> = {
+		ready: 'text-green-600',
+		'almost-ready': 'text-yellow-600',
+		'need-to-shop': 'text-[#b0a090]'
+	};
 </script>
 
 <svelte:head>
@@ -356,61 +411,109 @@
 		</div>
 	{:else}
 		<!-- Tab bar -->
-		<div class="mb-4 flex gap-1 rounded-xl bg-[#f0ece6] p-1">
-			{#each [{ id: 'all' as TabId, label: 'All' }, { id: 'trash' as TabId, label: 'Trash' }] as tab}
+		<div class="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-[#f0ece6] p-1">
+			{#each [
+				{ id: 'all' as TabId, label: 'All' },
+				{ id: 'ready' as TabId, label: 'Ready' },
+				{ id: 'almost-ready' as TabId, label: 'Almost Ready' },
+				{ id: 'need-to-shop' as TabId, label: 'Need to Shop' },
+				{ id: 'trash' as TabId, label: 'Trash' }
+			] as tab}
 				<button
 					onclick={() => { activeTab = tab.id; }}
-					class="flex-1 rounded-lg py-1.5 text-sm font-semibold transition {activeTab === tab.id ? 'bg-white text-[#2c2416] shadow-sm' : 'text-[#8a7a6a] hover:text-[#2c2416]'}"
+					class="flex-shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold transition {activeTab === tab.id ? 'bg-white text-[#2c2416] shadow-sm' : 'text-[#8a7a6a] hover:text-[#2c2416]'}"
 				>
 					{tab.label}
 				</button>
 			{/each}
 		</div>
 
-		{#if activeTab === 'all'}
-			{#if data.recipes.length === 0}
+		{#if activeTab !== 'trash'}
+			{#if filteredRecipes.length === 0}
 				<div class="rounded-2xl border border-dashed border-[#d8cfc4] bg-white p-10 text-center">
-					<p class="mb-1 text-[#8a7a6a]">No recipes yet.</p>
-					<p class="text-sm text-[#b0a090]">Tap "Scan Recipe" to photograph a recipe page.</p>
+					{#if activeTab === 'all'}
+						<p class="mb-1 text-[#8a7a6a]">No recipes yet.</p>
+						<p class="text-sm text-[#b0a090]">Tap "Scan Recipe" to photograph a recipe page.</p>
+					{:else}
+						<p class="text-[#8a7a6a]">No recipes in this category.</p>
+					{/if}
 				</div>
 			{:else}
 				<div class="flex flex-col gap-3">
-					{#each data.recipes as recipe (recipe.id)}
-						<div class="rounded-2xl border border-[#e8e2d9] bg-white px-5 py-4 shadow-sm">
-							<div class="flex items-start justify-between gap-2">
-								<h2 class="font-[Cormorant_Garamond,serif] text-lg font-semibold text-[#2c2416]">
-									{recipe.name}
-								</h2>
-								<div class="flex gap-2">
+					{#each filteredRecipes as recipe (recipe.id)}
+						{@const readiness = recipeReadiness.get(recipe.id)!}
+						{@const matches = matchIngredients(recipe.ingredients, data.foodItems)}
+						{@const isExpanded = expandedRecipeId === recipe.id}
+						<div class="rounded-2xl border border-[#e8e2d9] bg-white shadow-sm">
+							<div class="px-5 py-4">
+								<div class="flex items-start justify-between gap-2">
 									<button
-										onclick={() => startEdit(recipe)}
-										class="text-xs font-semibold text-[#5c4a2a] hover:underline"
+										onclick={() => toggleExpanded(recipe.id)}
+										class="min-w-0 flex-1 text-left"
+										aria-expanded={isExpanded}
 									>
-										Edit
+										<h2 class="font-[Cormorant_Garamond,serif] text-lg font-semibold text-[#2c2416]">
+											{recipe.name}
+										</h2>
+										{#if recipe.ingredients.length > 0}
+											<p class="mt-0.5 text-sm {readinessColor[readiness.status]}">
+												{readiness.matched} of {readiness.total} ingredient{readiness.total === 1 ? '' : 's'} · {readinessLabel[readiness.status]}
+											</p>
+										{:else}
+											<p class="mt-0.5 text-sm text-[#b0a090] italic">No ingredients</p>
+										{/if}
 									</button>
-									<form
-										method="POST"
-										action="?/trash"
-										use:enhance={() => {
-											return ({ update }) => {
-												showTrashToast(recipe);
-												update();
-											};
-										}}
-									>
-										<input type="hidden" name="id" value={recipe.id} />
-										<button type="submit" class="text-xs font-semibold text-red-400 hover:underline">
-											Delete
+									<div class="flex flex-shrink-0 gap-2">
+										<button
+											onclick={() => startEdit(recipe)}
+											class="text-xs font-semibold text-[#5c4a2a] hover:underline"
+										>
+											Edit
 										</button>
-									</form>
+										<form
+											method="POST"
+											action="?/trash"
+											use:enhance={() => {
+												return ({ update }) => {
+													showTrashToast(recipe);
+													update();
+												};
+											}}
+										>
+											<input type="hidden" name="id" value={recipe.id} />
+											<button type="submit" class="text-xs font-semibold text-red-400 hover:underline">
+												Delete
+											</button>
+										</form>
+									</div>
 								</div>
 							</div>
-							{#if recipe.ingredients.length > 0}
-								<p class="mt-1 text-sm text-[#8a7a6a]">
-									{recipe.ingredients.length} ingredient{recipe.ingredients.length === 1 ? '' : 's'}
-								</p>
-							{:else}
-								<p class="mt-1 text-sm text-[#b0a090] italic">No ingredients</p>
+
+							{#if isExpanded && recipe.ingredients.length > 0}
+								<div class="border-t border-[#f0ece6] px-5 pb-4 pt-3">
+									<ul class="flex flex-col gap-1.5">
+										{#each matches as match}
+											<li class="flex items-center gap-2 text-sm">
+												{#if match.matched}
+													<svg class="h-4 w-4 flex-shrink-0 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+														<polyline points="20 6 9 17 4 12" />
+													</svg>
+													<span class="text-[#2c2416]">{match.ingredient.name}</span>
+												{:else}
+													<svg class="h-4 w-4 flex-shrink-0 text-[#c0a880]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+														<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+													</svg>
+													<span class="text-[#8a7a6a]">{match.ingredient.name}</span>
+												{/if}
+												{#if match.ingredient.quantity || match.ingredient.unit}
+													<span class="ml-auto text-xs text-[#b0a090]">
+														{[match.ingredient.quantity, match.ingredient.unit].filter(Boolean).join(' ')}
+													</span>
+												{/if}
+											</li>
+										{/each}
+									</ul>
+								</div>
 							{/if}
 						</div>
 					{/each}

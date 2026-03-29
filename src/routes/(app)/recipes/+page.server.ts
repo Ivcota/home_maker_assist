@@ -10,15 +10,17 @@ import {
 	restoreRecipe,
 	findTrashedRecipes
 } from '$lib/domain/recipe/use-cases';
+import { findAllFoodItems } from '$lib/domain/inventory/use-cases';
 import type { CreateRecipeIngredientInput } from '$lib/domain/recipe/recipe';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = locals.user!.id;
-	const [recipes, trashedRecipes] = await Promise.all([
+	const [recipes, trashedRecipes, foodItems] = await Promise.all([
 		appRuntime.runPromise(findAllRecipes(userId).pipe(Effect.orDie)),
-		appRuntime.runPromise(findTrashedRecipes(userId).pipe(Effect.orDie))
+		appRuntime.runPromise(findTrashedRecipes(userId).pipe(Effect.orDie)),
+		appRuntime.runPromise(findAllFoodItems(userId).pipe(Effect.orDie))
 	]);
-	return { recipes, trashedRecipes };
+	return { recipes, trashedRecipes, foodItems };
 };
 
 function parseIngredients(formData: FormData): CreateRecipeIngredientInput[] | null {

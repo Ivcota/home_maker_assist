@@ -11,6 +11,7 @@ function rowToFoodItem(row: typeof foodItem.$inferSelect): FoodItem {
 		id: row.id,
 		userId: row.userId,
 		name: row.name,
+		canonicalName: row.canonicalName,
 		storageLocation: row.storageLocation,
 		trackingType: row.trackingType,
 		amount: row.amount !== null ? Number(row.amount) : null,
@@ -35,6 +36,7 @@ export const DrizzleFoodItemRepository = Layer.effect(
 							.values({
 								userId,
 								name: input.name,
+								canonicalName: input.canonicalName ?? null,
 								storageLocation: input.storageLocation,
 								trackingType: input.trackingType,
 								amount: input.amount !== null ? String(input.amount) : null,
@@ -56,6 +58,7 @@ export const DrizzleFoodItemRepository = Layer.effect(
 									items.map((item) => ({
 										userId,
 										name: item.name,
+										canonicalName: item.canonicalName ?? null,
 										storageLocation: item.storageLocation,
 										trackingType: item.trackingType,
 										amount: item.amount !== null ? String(item.amount) : null,
@@ -104,6 +107,7 @@ export const DrizzleFoodItemRepository = Layer.effect(
 								.update(foodItem)
 								.set({
 									name: input.name,
+									canonicalName: input.canonicalName ?? null,
 									storageLocation: input.storageLocation,
 									trackingType: input.trackingType,
 									amount: input.amount !== null ? String(input.amount) : null,

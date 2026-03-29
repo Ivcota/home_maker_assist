@@ -13,6 +13,7 @@ const makeItem = (overrides: Partial<FoodItem> = {}): FoodItem => ({
 	id: 1,
 	userId: 'user-1',
 	name: 'Milk',
+	canonicalName: null,
 	storageLocation: 'fridge',
 	trackingType: 'count',
 	amount: null,

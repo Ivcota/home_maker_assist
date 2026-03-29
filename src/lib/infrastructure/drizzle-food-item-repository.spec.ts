@@ -14,6 +14,7 @@ const makeFoodItemRow = (overrides: Partial<FoodItem> = {}): FoodItem => ({
 	id: 1,
 	userId: TEST_USER_ID,
 	name: 'Milk',
+	canonicalName: null,
 	storageLocation: 'fridge',
 	trackingType: 'count',
 	amount: null,

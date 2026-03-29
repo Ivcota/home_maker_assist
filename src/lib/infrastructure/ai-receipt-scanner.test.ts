@@ -4,6 +4,7 @@ import { mapRawItemToExtracted } from './ai-receipt-scanner.js';
 describe('mapRawItemToExtracted', () => {
 	const baseItem = {
 		name: 'Whole Milk',
+		canonicalName: null as string | null,
 		storageLocation: 'fridge' as const,
 		trackingType: 'count' as const,
 		quantity: 1,

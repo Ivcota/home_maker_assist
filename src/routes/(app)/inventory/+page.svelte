@@ -133,6 +133,7 @@
 		localId: number;
 		checked: boolean;
 		name: string;
+		canonicalName: string | null;
 		storageLocation: StorageLocation;
 		trackingType: TrackingType;
 		quantity: number | null;
@@ -153,6 +154,7 @@
 				.filter((i) => i.checked)
 				.map((i) => ({
 					name: i.name,
+					canonicalName: i.canonicalName,
 					storageLocation: i.storageLocation,
 					trackingType: i.trackingType,
 					quantity: i.trackingType === 'count' ? (i.quantity ?? 1) : null,
@@ -199,6 +201,7 @@
 
 			const items = (await res.json()) as Array<{
 				name: string;
+				canonicalName: string | null;
 				storageLocation: StorageLocation;
 				trackingType: TrackingType;
 				quantity: number | null;
@@ -215,6 +218,7 @@
 				localId: nextReviewId++,
 				checked: true,
 				name: item.name,
+				canonicalName: item.canonicalName,
 				storageLocation: item.storageLocation,
 				trackingType: item.trackingType,
 				quantity: item.quantity,

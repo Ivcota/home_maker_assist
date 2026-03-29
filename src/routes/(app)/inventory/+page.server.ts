@@ -44,7 +44,7 @@ function parseItemFields(formData: FormData) {
 	const quantity = trackingType === 'count' && quantityRaw ? parseInt(quantityRaw, 10) : null;
 	const expirationDate = expirationDateRaw ? new Date(expirationDateRaw) : null;
 
-	return { name, storageLocation, trackingType, amount, quantity, expirationDate };
+	return { name, canonicalName: null, storageLocation, trackingType, amount, quantity, expirationDate };
 }
 
 export const actions: Actions = {
@@ -169,6 +169,7 @@ export const actions: Actions = {
 
 		let rawItems: Array<{
 			name: string;
+			canonicalName: string | null;
 			storageLocation: string;
 			trackingType: string;
 			quantity: number | null;
@@ -187,6 +188,7 @@ export const actions: Actions = {
 
 		const items: CreateFoodItemInput[] = rawItems.map((item) => ({
 			name: item.name,
+			canonicalName: item.canonicalName ?? null,
 			storageLocation: item.storageLocation as StorageLocation,
 			trackingType: item.trackingType as TrackingType,
 			quantity: item.quantity,

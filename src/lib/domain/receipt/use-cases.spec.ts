@@ -13,6 +13,7 @@ const TEST_INPUT = { imageBase64: 'abc123', mimeType: 'image/jpeg' };
 
 const makeItem = (overrides: Partial<ExtractedFoodItem> = {}): ExtractedFoodItem => ({
 	name: 'Milk',
+	canonicalName: null,
 	storageLocation: 'fridge',
 	trackingType: 'count',
 	quantity: 1,
@@ -94,6 +95,7 @@ describe('extractItemsFromReceipt', () => {
 
 		expect(result[0]).toEqual({
 			name: 'Greek Yogurt',
+			canonicalName: null,
 			storageLocation: 'fridge',
 			trackingType: 'count',
 			quantity: 2,

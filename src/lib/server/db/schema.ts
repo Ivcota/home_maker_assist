@@ -21,6 +21,7 @@ export const foodItem = pgTable('food_item', {
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
 	name: text('name').notNull(),
+	canonicalName: text('canonical_name'),
 	storageLocation: storageLocationEnum('storage_location').notNull(),
 	trackingType: trackingTypeEnum('tracking_type').notNull(),
 	amount: numeric('amount'),

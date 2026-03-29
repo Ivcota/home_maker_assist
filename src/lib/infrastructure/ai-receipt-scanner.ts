@@ -10,6 +10,7 @@ import type { ExtractedFoodItem } from '$lib/domain/receipt/types.js';
 
 export interface RawExtractedItem {
 	name: string;
+	canonicalName: string | null;
 	storageLocation: 'pantry' | 'fridge' | 'freezer';
 	trackingType: 'amount' | 'count';
 	quantity: number | null;
@@ -25,6 +26,7 @@ export function mapRawItemToExtracted(item: RawExtractedItem, now: Date = new Da
 	}
 	return {
 		name: item.name,
+		canonicalName: item.canonicalName,
 		storageLocation: item.storageLocation,
 		trackingType: item.trackingType,
 		quantity: item.quantity,
@@ -46,6 +48,7 @@ export function classifyAIError(e: unknown): ExtractionError {
 
 const extractedFoodItemSchema = z.object({
 	name: z.string(),
+	canonicalName: z.string().nullable(),
 	storageLocation: z.enum(['pantry', 'fridge', 'freezer']),
 	trackingType: z.enum(['amount', 'count']),
 	quantity: z.number().nullable(),
@@ -57,6 +60,7 @@ const SYSTEM_PROMPT = `You are a food item extractor. Extract all food items fro
 
 For each item:
 - name: Expand abbreviations to full product names (e.g. "WHL MLK" → "Whole Milk", "CHKN BRST" → "Chicken Breast")
+- canonicalName: A normalized ingredient name for recipe matching (lowercase, generic, no brand or descriptor). Examples: "Whole Milk" → "milk", "Chicken Breast" → "chicken", "Unsalted Butter" → "butter", "All-Purpose Flour" → "flour". Null if not a basic ingredient.
 - storageLocation: infer from category:
   - dairy, meat, produce, deli → "fridge"
   - frozen items → "freezer"
