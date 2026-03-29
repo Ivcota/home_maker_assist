@@ -1,42 +1,83 @@
-# sv
+# KeptNow
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A household inventory management app that helps you track food items across your pantry, fridge, and freezer with smart expiration monitoring and AI-powered receipt scanning.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Inventory tracking** - Manage food items by storage location (pantry, fridge, freezer) with quantity or amount-based tracking
+- **Expiration alerts** - Automatic warnings for items expiring soon or already expired
+- **Receipt scanning** - Upload grocery receipts and let AI extract items with estimated expiration dates
+- **Restock tab** - See everything that needs attention with quick-shop links
+- **Soft deletes** - Trash items with a 24-hour restore window
+
+## Tech Stack
+
+- **Frontend**: SvelteKit, Svelte 5, Tailwind CSS 4, TypeScript
+- **Backend**: PostgreSQL, Drizzle ORM, Better Auth
+- **AI**: Anthropic Claude (receipt scanning via Vercel AI SDK)
+- **Architecture**: Effect.ts, domain-driven design, repository pattern
+
+## Setup
+
+### Prerequisites
+
+- Node.js (pnpm recommended)
+- Docker & Docker Compose
+
+### Install
 
 ```sh
-# create a new project
-npx sv create my-app
+pnpm install
 ```
 
-To recreate this project with the same configuration:
+### Environment
+
+Copy `.env.example` to `.env` and fill in the values:
 
 ```sh
-# recreate this project
-pnpm dlx sv@0.13.0 create --template minimal --types ts --add prettier eslint vitest="usages:unit,component" tailwindcss="plugins:none" drizzle="database:postgresql+postgresql:postgres.js+docker:yes" better-auth="demo:password" --install pnpm .
+cp .env.example .env
 ```
 
-## Developing
+Required variables:
+- `DATABASE_URL` - PostgreSQL connection string
+- `BETTER_AUTH_SECRET` - 32-character secret for auth
+- `ANTHROPIC_API_KEY` - For receipt scanning
+- `ORIGIN` - App origin URL (e.g. `http://localhost:5173`)
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Development
+
+The easiest way to start is with [just](https://github.com/casey/just), which handles the database and dev server:
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+just dev
 ```
 
-## Building
+Or manually:
 
-To create a production version of your app:
+```sh
+docker compose up -d        # Start PostgreSQL
+npm run db:push             # Push schema
+npm run dev                 # Start dev server at http://localhost:5173
+```
+
+### Build
 
 ```sh
 npm run build
+npm run preview
 ```
 
-You can preview the production build with `npm run preview`.
+## Scripts
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run check` | TypeScript & Svelte validation |
+| `npm run lint` | Prettier + ESLint |
+| `npm run format` | Auto-format code |
+| `npm run test` | Run unit tests |
+| `npm run db:push` | Push schema to database |
+| `npm run db:generate` | Generate migration files |
+| `npm run db:migrate` | Run migrations |
+| `npm run db:studio` | Open Drizzle Studio |
