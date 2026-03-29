@@ -25,6 +25,11 @@ export interface FoodItemRepository {
 		id: number
 	): Effect.Effect<void, FoodItemRepositoryError | FoodItemNotFoundError>;
 	findTrashed(userId: string): Effect.Effect<FoodItem[], FoodItemRepositoryError>;
+	patchCanonicalName(
+		userId: string,
+		id: number,
+		canonicalName: string
+	): Effect.Effect<void, FoodItemRepositoryError>;
 }
 
 export const FoodItemRepository = Context.GenericTag<FoodItemRepository>('FoodItemRepository');

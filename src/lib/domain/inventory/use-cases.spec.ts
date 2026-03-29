@@ -48,6 +48,7 @@ const makeRepo = (overrides: Partial<typeof FoodItemRepository.Service> = {}) =>
 		trash: () => Effect.succeed(undefined as void),
 		restore: () => Effect.succeed(undefined as void),
 		findTrashed: () => Effect.succeed([]),
+		patchCanonicalName: () => Effect.succeed(undefined as void),
 		...overrides
 	});
 

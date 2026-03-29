@@ -1,5 +1,6 @@
 import { Effect } from 'effect';
 import { FoodItemRepository } from './food-item-repository.js';
+import { CanonicalNameResolver } from './canonical-name-resolver.js';
 import {
 	FoodItemValidationError,
 	FoodItemRepositoryError,
@@ -130,4 +131,16 @@ export const findTrashedFoodItems = (
 	Effect.gen(function* () {
 		const repo = yield* FoodItemRepository;
 		return yield* repo.findTrashed(userId);
+	});
+
+export const resolveAndPatchCanonicalName = (
+	userId: string,
+	id: number,
+	name: string
+): Effect.Effect<void, Error | FoodItemRepositoryError, CanonicalNameResolver | FoodItemRepository> =>
+	Effect.gen(function* () {
+		const resolver = yield* CanonicalNameResolver;
+		const canonicalName = yield* resolver.resolve(name);
+		const repo = yield* FoodItemRepository;
+		yield* repo.patchCanonicalName(userId, id, canonicalName);
 	});
