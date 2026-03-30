@@ -28,11 +28,13 @@ const fakeUser = { id: 'user-1', name: 'Test', email: 'test@example.com' };
 const fakeRecipes = [
 	{
 		name: 'Chicken Soup',
-		ingredients: [{ name: 'Chicken', canonicalName: 'chicken', quantity: '1', unit: 'lb' }]
+		ingredients: [{ name: 'Chicken', canonicalName: 'chicken', quantity: { value: 453.592, unit: 'g' } }],
+		notes: []
 	},
 	{
 		name: 'Beef Stew',
-		ingredients: [{ name: 'Beef', canonicalName: 'beef', quantity: '2', unit: 'lbs' }]
+		ingredients: [{ name: 'Beef', canonicalName: 'beef', quantity: { value: 907.184, unit: 'g' } }],
+		notes: []
 	}
 ];
 

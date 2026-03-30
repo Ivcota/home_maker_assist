@@ -202,9 +202,7 @@
 				name: string;
 				canonicalName: string | null;
 				storageLocation: StorageLocation;
-				trackingType: 'count' | 'amount';
-				quantity: number | null;
-				amount: number | null;
+				quantity: { value: number; unit: QuantityUnit };
 				expirationDate: string | null;
 			}>;
 
@@ -219,10 +217,8 @@
 				name: item.name,
 				canonicalName: item.canonicalName,
 				storageLocation: item.storageLocation,
-				// Receipt scanner still returns trackingType/quantity/amount (issue #72 will update it)
-				// Convert to Quantity: count items use 'count', amount items default to count=1
-				quantityValue: item.trackingType === 'count' ? (item.quantity ?? 1) : 1,
-				quantityUnit: 'count' as QuantityUnit,
+				quantityValue: item.quantity.value,
+				quantityUnit: item.quantity.unit,
 				expirationDate: item.expirationDate
 					? new Date(item.expirationDate).toISOString().split('T')[0]
 					: ''

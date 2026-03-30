@@ -11,9 +11,7 @@ const makeItem = (overrides: Partial<ExtractedFoodItem> = {}): ExtractedFoodItem
 	name: 'Milk',
 	canonicalName: null,
 	storageLocation: 'fridge',
-	trackingType: 'count',
-	quantity: 1,
-	amount: null,
+	quantity: { value: 1, unit: 'count' },
 	expirationDate: null,
 	...overrides
 });
@@ -84,8 +82,7 @@ describe('extractItemsFromReceipt', () => {
 			makeItem({
 				name: 'greek yogurt',
 				storageLocation: 'fridge',
-				trackingType: 'count',
-				quantity: 2,
+				quantity: { value: 2, unit: 'count' },
 				expirationDate: expDate
 			})
 		];
@@ -100,9 +97,7 @@ describe('extractItemsFromReceipt', () => {
 			name: 'Greek Yogurt',
 			canonicalName: null,
 			storageLocation: 'fridge',
-			trackingType: 'count',
-			quantity: 2,
-			amount: null,
+			quantity: { value: 2, unit: 'count' },
 			expirationDate: expDate
 		});
 	});

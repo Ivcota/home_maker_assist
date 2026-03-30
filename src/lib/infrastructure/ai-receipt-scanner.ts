@@ -11,15 +11,27 @@ import {
 } from '$lib/domain/receipt/errors.js';
 import type { ExtractionError } from '$lib/domain/receipt/errors.js';
 import type { ExtractedFoodItem } from '$lib/domain/receipt/types.js';
+import { normalizeUnit, UnknownUnitError } from '$lib/infrastructure/unit-normalizer.js';
+import type { Quantity } from '$lib/domain/shared/quantity.js';
 
 export interface RawExtractedItem {
 	name: string;
 	canonicalName: string | null;
 	storageLocation: 'pantry' | 'fridge' | 'freezer';
-	trackingType: 'amount' | 'count';
-	quantity: number | null;
-	amount: number | null;
+	quantityValue: number;
+	quantityUnit: string;
 	daysToExpiration: number | null;
+}
+
+function safeNormalizeUnit(value: number, unit: string): Quantity {
+	try {
+		return normalizeUnit(value, unit);
+	} catch (e) {
+		if (e instanceof UnknownUnitError) {
+			return { value, unit: 'count' };
+		}
+		throw e;
+	}
 }
 
 export function mapRawItemToExtracted(
@@ -35,9 +47,7 @@ export function mapRawItemToExtracted(
 		name: item.name,
 		canonicalName: item.canonicalName,
 		storageLocation: item.storageLocation,
-		trackingType: item.trackingType,
-		quantity: item.quantity,
-		amount: item.amount,
+		quantity: safeNormalizeUnit(item.quantityValue, item.quantityUnit),
 		expirationDate
 	};
 }
@@ -57,9 +67,8 @@ const extractedFoodItemSchema = z.object({
 	name: z.string(),
 	canonicalName: z.string().nullable(),
 	storageLocation: z.enum(['pantry', 'fridge', 'freezer']),
-	trackingType: z.enum(['amount', 'count']),
-	quantity: z.number().nullable(),
-	amount: z.number().nullable(),
+	quantityValue: z.number(),
+	quantityUnit: z.string(),
 	daysToExpiration: z.number().nullable()
 });
 
@@ -72,9 +81,8 @@ For each item:
   - dairy, meat, produce, deli → "fridge"
   - frozen items → "freezer"
   - everything else (canned, dry goods, snacks, beverages, condiments) → "pantry"
-- trackingType: "count" for discrete items (bottles, boxes, bags, cans), "amount" for items measured by fill level (0–100%)
-- quantity: use the quantity shown on the receipt; default to 1 if not shown
-- amount: null (only set if trackingType is "amount", in which case set to 100)
+- quantityValue: the numeric quantity from the receipt; default to 1 if not shown
+- quantityUnit: the unit of measurement. Use standard units: "each" for discrete items (bottles, boxes, bags, cans), "lb", "oz", "g", "kg" for weight, "gal", "qt", "pt", "cup", "fl oz", "l", "ml" for volume. Default to "each" if unclear.
 - daysToExpiration: estimate how many days until the item expires, using your judgment per item. Examples for guidance:
   - dairy: ~12 days
   - produce: ~6 days

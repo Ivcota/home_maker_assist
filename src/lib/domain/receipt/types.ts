@@ -1,4 +1,5 @@
-import type { StorageLocation, TrackingType } from '$lib/domain/inventory/food-item.js';
+import type { StorageLocation } from '$lib/domain/inventory/food-item.js';
+import type { Quantity } from '$lib/domain/shared/quantity.js';
 
 export interface ExtractItemsInput {
 	imageBase64: string;
@@ -9,8 +10,6 @@ export interface ExtractedFoodItem {
 	name: string;
 	canonicalName: string | null;
 	storageLocation: StorageLocation;
-	trackingType: TrackingType;
-	quantity: number | null;
-	amount: number | null;
+	quantity: Quantity;
 	expirationDate: Date | null;
 }

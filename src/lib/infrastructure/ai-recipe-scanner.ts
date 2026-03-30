@@ -4,12 +4,15 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { z } from 'zod';
 import { RecipeScanner } from '$lib/domain/recipe/recipe-scanner.js';
+import type { ExtractedRecipe } from '$lib/domain/recipe/recipe-scanner.js';
 import {
 	UnreadableImageError,
 	NoItemsExtractedError,
 	AIProviderError
 } from '$lib/domain/receipt/errors.js';
 import type { ExtractionError } from '$lib/domain/receipt/errors.js';
+import { normalizeUnit, UnknownUnitError } from '$lib/infrastructure/unit-normalizer.js';
+import type { Quantity } from '$lib/domain/shared/quantity.js';
 
 function classifyAIError(e: unknown): ExtractionError {
 	if (e instanceof NoItemsExtractedError) return e;
@@ -22,7 +25,52 @@ function classifyAIError(e: unknown): ExtractionError {
 	return new AIProviderError({ cause: e });
 }
 
-const extractedIngredientSchema = z.object({
+export interface RawExtractedRecipeItem {
+	type: 'ingredient' | 'note';
+	name: string;
+	canonicalName: string | null;
+	quantity: string | null;
+	unit: string | null;
+}
+
+export interface RawExtractedRecipe {
+	name: string;
+	items: RawExtractedRecipeItem[];
+}
+
+function safeNormalizeQuantity(quantityStr: string | null, unit: string | null): Quantity {
+	const value = quantityStr != null ? parseFloat(quantityStr) : NaN;
+	if (isNaN(value) || unit == null) {
+		return { value: isNaN(value) ? 1 : value, unit: 'count' };
+	}
+	try {
+		return normalizeUnit(value, unit);
+	} catch (e) {
+		if (e instanceof UnknownUnitError) {
+			return { value, unit: 'count' };
+		}
+		throw e;
+	}
+}
+
+export function mapRawRecipeToExtracted(raw: RawExtractedRecipe): ExtractedRecipe {
+	const ingredients = raw.items
+		.filter((item) => item.type === 'ingredient')
+		.map((item) => ({
+			name: item.name,
+			canonicalName: item.canonicalName,
+			quantity: safeNormalizeQuantity(item.quantity, item.unit)
+		}));
+
+	const notes = raw.items
+		.filter((item) => item.type === 'note')
+		.map((item) => ({ text: item.name }));
+
+	return { name: raw.name, ingredients, notes };
+}
+
+const extractedRecipeItemSchema = z.object({
+	type: z.enum(['ingredient', 'note']),
 	name: z.string(),
 	canonicalName: z.string().nullable(),
 	quantity: z.string().nullable(),
@@ -31,7 +79,7 @@ const extractedIngredientSchema = z.object({
 
 const extractedRecipeSchema = z.object({
 	name: z.string(),
-	ingredients: z.array(extractedIngredientSchema)
+	items: z.array(extractedRecipeItemSchema)
 });
 
 const SYSTEM_PROMPT = `You are a recipe extractor. Extract all recipes from the photographed recipe book page.
@@ -40,15 +88,21 @@ A page may contain one recipe or multiple recipes. Return all recipes found.
 
 For each recipe:
 - name: The full recipe name as written on the page
-- ingredients: An array of all ingredients listed
+- items: An array of all items from the recipe
 
-For each ingredient:
-- name: The ingredient name as written (e.g., "all-purpose flour", "unsalted butter")
-- canonicalName: A lowercase, normalized name for matching (e.g., "flour", "butter", "chicken thighs") — omit brand names and descriptors
-- quantity: The quantity as a string (e.g., "2", "1/2", "3–4") or null if not specified
-- unit: The unit of measurement (e.g., "cups", "tbsp", "lbs", "oz") or null if not specified
+For each item, set type to "ingredient" or "note":
+- type "ingredient": A measured ingredient with name, quantity, and unit
+  - name: The ingredient name as written (e.g., "all-purpose flour", "unsalted butter")
+  - canonicalName: A lowercase, normalized name for matching (e.g., "flour", "butter", "chicken thighs") — omit brand names and descriptors
+  - quantity: The quantity as a string (e.g., "2", "0.5", "3") or null if not specified
+  - unit: The unit of measurement (e.g., "cups", "tbsp", "lbs", "oz") or null if not specified
+- type "note": Free-text instructions or tips that are not measured ingredients (e.g., "Season to taste", "Serve warm")
+  - name: The note text as written
+  - canonicalName: null
+  - quantity: null
+  - unit: null
 
-Extract only the ingredients list for each recipe. Do not extract recipe instructions.`;
+Extract only the ingredients and notes for each recipe. Do not extract full recipe instructions.`;
 
 export const AIRecipeScanner = RecipeScanner.of({
 	extractRecipes: (input) =>
@@ -81,7 +135,9 @@ export const AIRecipeScanner = RecipeScanner.of({
 					]
 				});
 
-				const recipes = result.object.filter((r) => r.name.trim());
+				const recipes = result.object
+					.filter((r) => r.name.trim())
+					.map(mapRawRecipeToExtracted);
 
 				if (recipes.length === 0) {
 					throw new UnreadableImageError();

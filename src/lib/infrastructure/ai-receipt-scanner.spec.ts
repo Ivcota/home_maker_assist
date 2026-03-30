@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { NoObjectGeneratedError } from 'ai';
-import { classifyAIError } from './ai-receipt-scanner.js';
+import { classifyAIError, mapRawItemToExtracted } from './ai-receipt-scanner.js';
 import {
 	UnreadableImageError,
 	NoItemsExtractedError,
@@ -41,5 +41,77 @@ describe('classifyAIError', () => {
 		const result = classifyAIError(cause);
 		expect(result).toBeInstanceOf(AIProviderError);
 		expect((result as AIProviderError).cause).toBe(cause);
+	});
+});
+
+describe('mapRawItemToExtracted', () => {
+	const now = new Date('2026-03-29T12:00:00Z');
+
+	it('normalizes volume units to ml in Quantity', () => {
+		const result = mapRawItemToExtracted(
+			{
+				name: 'Whole Milk',
+				canonicalName: 'milk',
+				storageLocation: 'fridge',
+				quantityValue: 2,
+				quantityUnit: 'cups',
+				daysToExpiration: 12
+			},
+			now
+		);
+
+		expect(result.quantity).toEqual({ value: 2 * 236.588, unit: 'ml' });
+		expect(result.name).toBe('Whole Milk');
+		expect(result.storageLocation).toBe('fridge');
+		expect(result.expirationDate).toEqual(new Date('2026-04-10T12:00:00Z'));
+	});
+
+	it('normalizes mass units to grams in Quantity', () => {
+		const result = mapRawItemToExtracted(
+			{
+				name: 'Chicken Breast',
+				canonicalName: 'chicken',
+				storageLocation: 'fridge',
+				quantityValue: 1.5,
+				quantityUnit: 'lbs',
+				daysToExpiration: 4
+			},
+			now
+		);
+
+		expect(result.quantity).toEqual({ value: 1.5 * 453.592, unit: 'g' });
+	});
+
+	it('normalizes count units in Quantity', () => {
+		const result = mapRawItemToExtracted(
+			{
+				name: 'Eggs',
+				canonicalName: 'egg',
+				storageLocation: 'fridge',
+				quantityValue: 1,
+				quantityUnit: 'dozen',
+				daysToExpiration: 21
+			},
+			now
+		);
+
+		expect(result.quantity).toEqual({ value: 12, unit: 'count' });
+	});
+
+	it('falls back to count when unit is unknown', () => {
+		const result = mapRawItemToExtracted(
+			{
+				name: 'Mystery Item',
+				canonicalName: null,
+				storageLocation: 'pantry',
+				quantityValue: 3,
+				quantityUnit: 'bunches',
+				daysToExpiration: null
+			},
+			now
+		);
+
+		expect(result.quantity).toEqual({ value: 3, unit: 'count' });
+		expect(result.expirationDate).toBeNull();
 	});
 });

@@ -6,9 +6,8 @@ describe('mapRawItemToExtracted', () => {
 		name: 'Whole Milk',
 		canonicalName: null as string | null,
 		storageLocation: 'fridge' as const,
-		trackingType: 'count' as const,
-		quantity: 1,
-		amount: null,
+		quantityValue: 1,
+		quantityUnit: 'each',
 		daysToExpiration: null as number | null
 	};
 
@@ -54,15 +53,14 @@ describe('mapRawItemToExtracted', () => {
 	});
 
 	it('passes through other fields unchanged', () => {
-		expect.assertions(5);
+		expect.assertions(3);
 		const now = new Date('2026-03-28T00:00:00.000Z');
 		const item = {
 			...baseItem,
 			name: 'Chicken Breast',
 			storageLocation: 'freezer' as const,
-			trackingType: 'amount' as const,
-			quantity: 2,
-			amount: 100,
+			quantityValue: 2,
+			quantityUnit: 'lbs',
 			daysToExpiration: 90
 		};
 
@@ -70,8 +68,6 @@ describe('mapRawItemToExtracted', () => {
 
 		expect(result.name).toBe('Chicken Breast');
 		expect(result.storageLocation).toBe('freezer');
-		expect(result.trackingType).toBe('amount');
-		expect(result.quantity).toBe(2);
-		expect(result.amount).toBe(100);
+		expect(result.quantity).toEqual({ value: 2 * 453.592, unit: 'g' });
 	});
 });

@@ -18,12 +18,14 @@
 		localId: number;
 		name: string;
 		canonicalIngredientId: number | null;
+		quantity: { value: number; unit: string };
 	}
 
 	interface BatchRecipe {
 		batchId: number;
 		name: string;
 		ingredients: ReviewIngredient[];
+		notes: string[];
 	}
 
 	let scanning = $state(false);
@@ -137,7 +139,12 @@
 
 				const recipes = (await res.json()) as Array<{
 					name: string;
-					ingredients: Array<{ name: string }>;
+					ingredients: Array<{
+						name: string;
+						canonicalName: string | null;
+						quantity: { value: number; unit: string };
+					}>;
+					notes: Array<{ text: string }>;
 				}>;
 
 				for (const recipe of recipes) {
@@ -147,8 +154,10 @@
 						ingredients: recipe.ingredients.map((ing) => ({
 							localId: nextLocalId++,
 							name: ing.name,
-							canonicalIngredientId: null
-						}))
+							canonicalIngredientId: null,
+							quantity: ing.quantity
+						})),
+						notes: recipe.notes.map((n) => n.text)
 					});
 				}
 			} catch {
@@ -187,7 +196,8 @@
 			recipe.ingredients.push({
 				localId: nextLocalId++,
 				name: '',
-				canonicalIngredientId: null
+				canonicalIngredientId: null,
+				quantity: { value: 1, unit: 'count' }
 			});
 	}
 
@@ -204,7 +214,8 @@
 		editIngredients = recipe.ingredients.map((ing) => ({
 			localId: nextLocalId++,
 			name: ing.name,
-			canonicalIngredientId: ing.canonicalIngredientId
+			canonicalIngredientId: ing.canonicalIngredientId,
+			quantity: ing.quantity
 		}));
 	}
 
@@ -218,7 +229,8 @@
 		editIngredients.push({
 			localId: nextLocalId++,
 			name: '',
-			canonicalIngredientId: null
+			canonicalIngredientId: null,
+			quantity: { value: 1, unit: 'count' }
 		});
 	}
 
@@ -232,7 +244,7 @@
 			editIngredients.map((i) => ({
 				name: i.name,
 				canonicalIngredientId: i.canonicalIngredientId,
-				quantity: { value: 1, unit: 'count' }
+				quantity: i.quantity
 			}))
 		)
 	);
@@ -399,8 +411,11 @@
 					batchRecipe.ingredients.map((i) => ({
 						name: i.name,
 						canonicalIngredientId: i.canonicalIngredientId,
-						quantity: { value: 1, unit: 'count' }
+						quantity: i.quantity
 					}))
+				)}
+				{@const notesJson = JSON.stringify(
+					batchRecipe.notes.map((text) => ({ text }))
 				)}
 				{@const duplicateName = batchDuplicates.get(batchRecipe.batchId)}
 				<div class="rounded-2xl border border-[#e8e2d9] bg-white p-5 shadow-sm">
@@ -456,7 +471,7 @@
 							(id) => removeBatchIngredient(batchRecipe.batchId, id)
 						)}
 						<input type="hidden" name="ingredients" value={ingredientsJson} />
-						<input type="hidden" name="notes" value="[]" />
+						<input type="hidden" name="notes" value={notesJson} />
 						<button
 							type="submit"
 							class="w-full rounded-xl bg-[#5c4a2a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4a3a1f]"
