@@ -218,6 +218,17 @@ export const DrizzleFoodItemRepository = Layer.effect(
 							message: 'Failed to patch canonical name',
 							cause: e
 						})
+				}),
+			trashAll: (userId) =>
+				Effect.tryPromise({
+					try: () =>
+						db
+							.update(foodItem)
+							.set({ trashedAt: new Date(), updatedAt: new Date() })
+							.where(and(eq(foodItem.userId, userId), isNull(foodItem.trashedAt)))
+							.then(() => undefined as void),
+					catch: (e) =>
+						new FoodItemRepositoryError({ message: 'Failed to trash all food items', cause: e })
 				})
 		};
 	})

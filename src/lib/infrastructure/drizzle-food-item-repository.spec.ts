@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Effect, Layer } from 'effect';
-import { createFoodItems } from '$lib/domain/inventory/use-cases.js';
+import { createFoodItems, trashAllFoodItems } from '$lib/domain/inventory/use-cases.js';
 import { DrizzleFoodItemRepository } from './drizzle-food-item-repository.js';
 import { Database } from './database.js';
 import type { FoodItem } from '$lib/domain/inventory/food-item.js';
@@ -62,6 +62,32 @@ describe('DrizzleFoodItemRepository', () => {
 			expect(result).toHaveLength(2);
 			expect(result[0].name).toBe('Milk');
 			expect(result[1].name).toBe('Eggs');
+		});
+	});
+
+	it('trashAll issues a bulk UPDATE for the given user', () => {
+		let capturedWhere: unknown;
+		let capturedSet: unknown;
+
+		const mockDb = {
+			update: () => ({
+				set: (values: unknown) => {
+					capturedSet = values;
+					return {
+						where: (condition: unknown) => {
+							capturedWhere = condition;
+							return { then: (fn: (v: void) => void) => Promise.resolve(fn(undefined)) };
+						}
+					};
+				}
+			})
+		};
+
+		return Effect.runPromise(
+			trashAllFoodItems(TEST_USER_ID).pipe(Effect.provide(makeDbLayer(mockDb)))
+		).then(() => {
+			expect(capturedSet).toMatchObject({ trashedAt: expect.any(Date), updatedAt: expect.any(Date) });
+			expect(capturedWhere).toBeDefined();
 		});
 	});
 });

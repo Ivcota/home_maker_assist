@@ -7,11 +7,13 @@ import {
 	findAllFoodItems,
 	updateFoodItem,
 	trashFoodItem,
+	trashAllFoodItems,
 	restoreFoodItem,
 	RESTORE_WINDOW_HOURS
 } from './use-cases.js';
 import {
 	FoodItemValidationError,
+	FoodItemRepositoryError,
 	FoodItemNotFoundError,
 	FoodItemRestoreExpiredError
 } from './errors.js';
@@ -48,6 +50,7 @@ const makeRepo = (overrides: Partial<typeof FoodItemRepository.Service> = {}) =>
 		restore: () => Effect.succeed(undefined as void),
 		findTrashed: () => Effect.succeed([]),
 		patchCanonicalName: () => Effect.succeed(undefined as void),
+		trashAll: () => Effect.succeed(undefined as void),
 		...overrides
 	});
 
@@ -207,6 +210,41 @@ describe('domain/inventory', () => {
 			trashFoodItem(TEST_USER_ID, 1).pipe(Effect.provide(makeRepo()))
 		);
 		expect(result).toBeUndefined();
+	});
+
+	it('trashAllFoodItems delegates to repo.trashAll', async () => {
+		let trashAllCalled = false;
+		const result = await Effect.runPromise(
+			trashAllFoodItems(TEST_USER_ID).pipe(
+				Effect.provide(makeRepo({ trashAll: () => { trashAllCalled = true; return Effect.succeed(undefined as void); } }))
+			)
+		);
+		expect(result).toBeUndefined();
+		expect(trashAllCalled).toBe(true);
+	});
+
+	it('trashAllFoodItems is a no-op when there are no active items', async () => {
+		const result = await Effect.runPromise(
+			trashAllFoodItems(TEST_USER_ID).pipe(
+				Effect.provide(makeRepo({ trashAll: () => Effect.succeed(undefined as void) }))
+			)
+		);
+		expect(result).toBeUndefined();
+	});
+
+	it('trashAllFoodItems propagates FoodItemRepositoryError', async () => {
+		const result = await Effect.runPromise(
+			trashAllFoodItems(TEST_USER_ID).pipe(
+				Effect.provide(
+					makeRepo({
+						trashAll: () =>
+							Effect.fail(new FoodItemRepositoryError({ message: 'DB error', cause: null }))
+					})
+				),
+				Effect.flip
+			)
+		);
+		expect(result).toBeInstanceOf(FoodItemRepositoryError);
 	});
 
 	it('restoreFoodItem succeeds when trashed within window', async () => {

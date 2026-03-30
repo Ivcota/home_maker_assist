@@ -113,6 +113,14 @@ export const findTrashedFoodItems = (
 		return yield* repo.findTrashed(userId);
 	});
 
+export const trashAllFoodItems = (
+	userId: string
+): Effect.Effect<void, FoodItemRepositoryError, FoodItemRepository> =>
+	Effect.gen(function* () {
+		const repo = yield* FoodItemRepository;
+		yield* repo.trashAll(userId);
+	});
+
 export const resolveAndPatchCanonicalName = (
 	userId: string,
 	id: number,

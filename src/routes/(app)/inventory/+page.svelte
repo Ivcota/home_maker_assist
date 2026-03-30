@@ -108,6 +108,7 @@
 		expired: 'Expired'
 	};
 
+	let showDeleteAllDialog = $state(false);
 	let checkedRestockIds = $state(new Set<number>());
 
 	function toggleRestock(id: number) {
@@ -317,6 +318,15 @@
 				? 'Nothing in inventory yet. Add your first item above.'
 				: `${data.items.length} item${data.items.length === 1 ? '' : 's'} in inventory`}
 		</p>
+		{#if data.items.length > 0}
+			<button
+				type="button"
+				onclick={() => (showDeleteAllDialog = true)}
+				class="mt-5 rounded-lg border border-red-800/40 px-4 py-2 text-xs font-semibold text-red-400 transition-colors hover:border-red-600/60 hover:text-red-300"
+			>
+				Delete all inventory
+			</button>
+		{/if}
 	</div>
 
 	<!-- Tab bar -->
@@ -1070,6 +1080,47 @@
 		{/if}
 	{/if}
 </main>
+
+<!-- Delete All confirmation dialog -->
+{#if showDeleteAllDialog}
+	<dialog
+		open
+		class="fixed inset-0 z-50 m-auto h-fit w-full max-w-sm rounded-2xl border border-[#e8e2d9] bg-white p-8 shadow-2xl backdrop:bg-black/40"
+	>
+		<h2 class="mb-2 font-[Cormorant_Garamond,serif] text-xl font-bold text-[#1a1714]">
+			Delete all inventory?
+		</h2>
+		<p class="mb-6 text-sm leading-relaxed text-[#8a8279]">
+			All {data.items.length} item{data.items.length === 1 ? '' : 's'} will be moved to trash. You can restore
+			them within 24 hours.
+		</p>
+		<div class="flex gap-3">
+			<button
+				type="button"
+				onclick={() => (showDeleteAllDialog = false)}
+				class="flex-1 rounded-lg border border-[#e8e2d9] px-4 py-2.5 text-sm font-semibold text-[#3a3632] transition-colors hover:bg-[#f5f0eb]"
+			>
+				Cancel
+			</button>
+			<form
+				method="post"
+				action="?/deleteAll"
+				use:enhance={() => {
+					showDeleteAllDialog = false;
+					return ({ update }) => update();
+				}}
+				class="flex-1"
+			>
+				<button
+					type="submit"
+					class="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+				>
+					Delete all
+				</button>
+			</form>
+		</div>
+	</dialog>
+{/if}
 
 <style>
 	@keyframes shimmer {

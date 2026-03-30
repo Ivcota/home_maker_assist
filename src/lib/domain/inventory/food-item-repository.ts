@@ -30,6 +30,7 @@ export interface FoodItemRepository {
 		id: number,
 		canonicalName: string
 	): Effect.Effect<void, FoodItemRepositoryError>;
+	trashAll(userId: string): Effect.Effect<void, FoodItemRepositoryError>;
 }
 
 export const FoodItemRepository = Context.GenericTag<FoodItemRepository>('FoodItemRepository');

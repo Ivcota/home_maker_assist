@@ -10,6 +10,7 @@ import {
 	findAllFoodItems,
 	updateFoodItem,
 	trashFoodItem,
+	trashAllFoodItems,
 	restoreFoodItem,
 	findTrashedFoodItems,
 	resolveAndPatchCanonicalName
@@ -229,6 +230,25 @@ export const actions: Actions = {
 						}
 						return { ok: false as const, status: 500 as const, message: 'Database error' };
 					},
+					onSuccess: () => ({ ok: true as const })
+				}
+			)
+		);
+
+		if (!outcome.ok) return fail(outcome.status, { message: outcome.message });
+	},
+
+	deleteAll: async ({ locals }) => {
+		if (!locals.user) return fail(401, { message: 'Unauthorized' });
+
+		const userId = locals.user.id;
+		const ctx = { userId, requestId: locals.requestId, route: '/inventory' };
+
+		const outcome = await appRuntime.runPromise(
+			Effect.match(
+				withRequestLogging(trashAllFoodItems(userId), { ...ctx, useCase: 'trashAllFoodItems' }),
+				{
+					onFailure: () => ({ ok: false as const, status: 500 as const, message: 'Database error' }),
 					onSuccess: () => ({ ok: true as const })
 				}
 			)
