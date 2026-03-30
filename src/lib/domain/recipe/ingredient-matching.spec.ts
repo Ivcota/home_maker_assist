@@ -36,7 +36,7 @@ describe('matchIngredients', () => {
 		const ingredients = [makeIngredient({ name: 'all-purpose flour', canonicalIngredientId: 5 })];
 		const foodItems = [makeFoodItem({ name: 'Bread Flour', canonicalIngredientId: 5 })];
 		const result = matchIngredients(ingredients, foodItems);
-		expect(result).toEqual([{ ingredient: ingredients[0], matched: true }]);
+		expect(result[0].matched).toBe(true);
 	});
 
 	it('does not match when both have canonical IDs but they differ', () => {
@@ -132,6 +132,51 @@ describe('calculateReadiness', () => {
 	it('returns need-to-shop when nothing matched', () => {
 		const ingredients = [makeIngredient({ name: 'saffron', canonicalIngredientId: null })];
 		const result = calculateReadiness(ingredients, []);
+		expect(result).toEqual({ matched: 0, total: 1, status: 'need-to-shop' });
+	});
+
+	it('counts ingredient as matched when inventory quantity is sufficient', () => {
+		const ingredients = [
+			makeIngredient({ name: 'flour', quantity: { value: 500, unit: 'g' } })
+		];
+		const foodItems = [
+			makeFoodItem({ name: 'flour', quantity: { value: 600, unit: 'g' } })
+		];
+		const result = calculateReadiness(ingredients, foodItems);
+		expect(result).toEqual({ matched: 1, total: 1, status: 'ready' });
+	});
+
+	it('flags unitMismatch when recipe and inventory units differ', () => {
+		const ingredients = [
+			makeIngredient({ name: 'flour', quantity: { value: 500, unit: 'g' } })
+		];
+		const foodItems = [
+			makeFoodItem({ name: 'flour', quantity: { value: 2, unit: 'count' } })
+		];
+		const result = matchIngredients(ingredients, foodItems);
+		expect(result[0].unitMismatch).toBe(true);
+		expect(result[0].matched).toBe(false);
+	});
+
+	it('does not match when units are incompatible between recipe and inventory', () => {
+		const ingredients = [
+			makeIngredient({ name: 'flour', quantity: { value: 500, unit: 'g' } })
+		];
+		const foodItems = [
+			makeFoodItem({ name: 'flour', quantity: { value: 2, unit: 'count' } })
+		];
+		const result = calculateReadiness(ingredients, foodItems);
+		expect(result).toEqual({ matched: 0, total: 1, status: 'need-to-shop' });
+	});
+
+	it('does not count ingredient as matched when inventory quantity is insufficient', () => {
+		const ingredients = [
+			makeIngredient({ name: 'flour', quantity: { value: 500, unit: 'g' } })
+		];
+		const foodItems = [
+			makeFoodItem({ name: 'flour', quantity: { value: 100, unit: 'g' } })
+		];
+		const result = calculateReadiness(ingredients, foodItems);
 		expect(result).toEqual({ matched: 0, total: 1, status: 'need-to-shop' });
 	});
 });

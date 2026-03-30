@@ -1,4 +1,5 @@
-import type { StorageLocation, TrackingType } from '$lib/domain/inventory/food-item.js';
+import type { StorageLocation } from '$lib/domain/inventory/food-item.js';
+import type { Quantity } from '$lib/domain/shared/quantity.js';
 
 export type ShoppingListSourceType = 'restock' | 'recipe';
 
@@ -12,7 +13,7 @@ export interface ShoppingListItem {
 	sourceRestockItemId: number | null;
 	sourceRecipeNames: string[] | null;
 	carriedStorageLocation: StorageLocation;
-	carriedTrackingType: TrackingType;
+	quantity: Quantity;
 	createdAt: Date;
 }
 
@@ -21,7 +22,7 @@ export interface RestockShoppingItemInput {
 	displayName: string;
 	sourceRestockItemId: number;
 	carriedStorageLocation: StorageLocation;
-	carriedTrackingType: TrackingType;
+	quantity: Quantity;
 }
 
 export interface RecipeShoppingItemInput {
@@ -29,5 +30,5 @@ export interface RecipeShoppingItemInput {
 	displayName: string;
 	sourceRecipeNames: string[];
 	carriedStorageLocation: StorageLocation;
-	carriedTrackingType: TrackingType;
+	quantity: Quantity;
 }

@@ -2,7 +2,6 @@ import { pgTable, serial, integer, text, timestamp, numeric, pgEnum, boolean, un
 import { user } from './auth.schema.js';
 
 export const storageLocationEnum = pgEnum('storage_location', ['pantry', 'fridge', 'freezer']);
-// trackingTypeEnum is kept for shopping_list_item.carried_tracking_type (to be removed in issue #73)
 export const trackingTypeEnum = pgEnum('tracking_type', ['amount', 'count']);
 
 export const task = pgTable('task', {
@@ -78,7 +77,8 @@ export const shoppingListItem = pgTable('shopping_list_item', {
 	sourceRestockItemId: integer('source_restock_item_id'),
 	sourceRecipeNames: text('source_recipe_names').array(),
 	carriedStorageLocation: storageLocationEnum('carried_storage_location').notNull(),
-	carriedTrackingType: trackingTypeEnum('carried_tracking_type').notNull(),
+	quantityValue: numeric('quantity_value').notNull(),
+	quantityUnit: text('quantity_unit').notNull(),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 }, (t) => [
 	unique().on(t.userId, t.canonicalKey)

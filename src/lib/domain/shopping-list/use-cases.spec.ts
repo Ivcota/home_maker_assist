@@ -41,7 +41,7 @@ function makeShoppingListItem(overrides: Partial<ShoppingListItem> = {}): Shoppi
 		sourceRestockItemId: 1,
 		sourceRecipeNames: null,
 		carriedStorageLocation: 'fridge',
-		carriedTrackingType: 'count',
+		quantity: { value: 1, unit: 'count' as const },
 		createdAt: now,
 		...overrides
 	};
@@ -130,7 +130,7 @@ const baseRestockShoppingItem: ShoppingListItem = {
 	sourceRestockItemId: 10,
 	sourceRecipeNames: null,
 	carriedStorageLocation: 'fridge',
-	carriedTrackingType: 'count',
+	quantity: { value: 1, unit: 'count' as const },
 	createdAt: now
 };
 
@@ -144,7 +144,7 @@ const baseRecipeShoppingItem: ShoppingListItem = {
 	sourceRestockItemId: null,
 	sourceRecipeNames: ['Bread'],
 	carriedStorageLocation: 'pantry',
-	carriedTrackingType: 'count',
+	quantity: { value: 1, unit: 'count' as const },
 	createdAt: now
 };
 
@@ -178,7 +178,7 @@ describe('generateShoppingList', () => {
 				displayName: 'Milk',
 				sourceRestockItemId: 10,
 				carriedStorageLocation: 'fridge',
-				carriedTrackingType: 'count'
+				quantity: { value: 2, unit: 'count' }
 			}
 		]);
 	});
@@ -510,6 +510,164 @@ describe('generateShoppingList', () => {
 		expect(capturedRecipeItems![0].canonicalKey).toBe('flour');
 		expect(capturedRecipeItems![0].sourceRecipeNames).toEqual(['Pasta', 'Pancakes']);
 	});
+
+	it('calculates deficit quantity when inventory has some but not enough', async () => {
+		const recipe = makeRecipe({
+			ingredients: [
+				{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 500, unit: 'g' as const } }
+			]
+		});
+		const flourInInventory = makeFoodItem({
+			id: 2,
+			name: 'Flour',
+			canonicalName: 'flour',
+			quantity: { value: 200, unit: 'g' },
+			expirationDate: freshDate
+		});
+		let capturedRecipeItems: RecipeShoppingItemInput[] | null = null;
+
+		const shoppingListLayer = makeShoppingListRepo({
+			addMissingRestock: () => Effect.void,
+			mergeRecipeIngredients: (_, items) => {
+				capturedRecipeItems = items;
+				return Effect.void;
+			},
+			findAll: () => Effect.succeed([])
+		});
+		const foodItemLayer = makeFoodItemRepo({
+			findAll: () => Effect.succeed([flourInInventory])
+		});
+		const recipeLayer = makeRecipeRepo({ findAll: () => Effect.succeed([recipe]) });
+
+		await Effect.runPromise(
+			generateShoppingList('user-a', now).pipe(
+				Effect.provide(Layer.mergeAll(shoppingListLayer, foodItemLayer, recipeLayer))
+			)
+		);
+
+		expect(capturedRecipeItems).toHaveLength(1);
+		expect(capturedRecipeItems![0].quantity).toEqual({ value: 300, unit: 'g' });
+	});
+
+	it('sums quantities across multiple recipes and calculates deficit against inventory', async () => {
+		const recipe1 = makeRecipe({
+			id: 1,
+			name: 'Pasta',
+			ingredients: [
+				{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 200, unit: 'g' as const } }
+			]
+		});
+		const recipe2 = makeRecipe({
+			id: 2,
+			name: 'Pancakes',
+			ingredients: [
+				{ id: 2, recipeId: 2, name: 'Flour', canonicalIngredientId: null, quantity: { value: 300, unit: 'g' as const } }
+			]
+		});
+		const flourInInventory = makeFoodItem({
+			id: 2,
+			name: 'Flour',
+			canonicalName: 'flour',
+			quantity: { value: 100, unit: 'g' },
+			expirationDate: freshDate
+		});
+		let capturedRecipeItems: RecipeShoppingItemInput[] | null = null;
+
+		const shoppingListLayer = makeShoppingListRepo({
+			addMissingRestock: () => Effect.void,
+			mergeRecipeIngredients: (_, items) => {
+				capturedRecipeItems = items;
+				return Effect.void;
+			},
+			findAll: () => Effect.succeed([])
+		});
+		const foodItemLayer = makeFoodItemRepo({
+			findAll: () => Effect.succeed([flourInInventory])
+		});
+		const recipeLayer = makeRecipeRepo({ findAll: () => Effect.succeed([recipe1, recipe2]) });
+
+		await Effect.runPromise(
+			generateShoppingList('user-a', now).pipe(
+				Effect.provide(Layer.mergeAll(shoppingListLayer, foodItemLayer, recipeLayer))
+			)
+		);
+
+		expect(capturedRecipeItems).toHaveLength(1);
+		expect(capturedRecipeItems![0].quantity).toEqual({ value: 400, unit: 'g' });
+		expect(capturedRecipeItems![0].sourceRecipeNames).toEqual(['Pasta', 'Pancakes']);
+	});
+
+	it('uses full recipe quantity when unit mismatch with inventory', async () => {
+		const recipe = makeRecipe({
+			ingredients: [
+				{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 500, unit: 'g' as const } }
+			]
+		});
+		const flourInInventory = makeFoodItem({
+			id: 2,
+			name: 'Flour',
+			canonicalName: 'flour',
+			quantity: { value: 2, unit: 'count' },
+			expirationDate: freshDate
+		});
+		let capturedRecipeItems: RecipeShoppingItemInput[] | null = null;
+
+		const shoppingListLayer = makeShoppingListRepo({
+			addMissingRestock: () => Effect.void,
+			mergeRecipeIngredients: (_, items) => {
+				capturedRecipeItems = items;
+				return Effect.void;
+			},
+			findAll: () => Effect.succeed([])
+		});
+		const foodItemLayer = makeFoodItemRepo({
+			findAll: () => Effect.succeed([flourInInventory])
+		});
+		const recipeLayer = makeRecipeRepo({ findAll: () => Effect.succeed([recipe]) });
+
+		await Effect.runPromise(
+			generateShoppingList('user-a', now).pipe(
+				Effect.provide(Layer.mergeAll(shoppingListLayer, foodItemLayer, recipeLayer))
+			)
+		);
+
+		expect(capturedRecipeItems).toHaveLength(1);
+		expect(capturedRecipeItems![0].quantity).toEqual({ value: 500, unit: 'g' });
+	});
+
+	it('carries food item quantity on restock shopping items', async () => {
+		const expiredItem = makeFoodItem({
+			id: 10,
+			name: 'Milk',
+			canonicalName: 'milk',
+			quantity: { value: 500, unit: 'ml' }
+		});
+		let capturedItems: unknown = null;
+
+		const shoppingListLayer = makeShoppingListRepo({
+			addMissingRestock: (_, items) => {
+				capturedItems = items;
+				return Effect.void;
+			},
+			mergeRecipeIngredients: () => Effect.void,
+			findAll: () => Effect.succeed([])
+		});
+		const foodItemLayer = makeFoodItemRepo({
+			findAll: () => Effect.succeed([expiredItem])
+		});
+		const recipeLayer = makeRecipeRepo({ findAll: () => Effect.succeed([]) });
+
+		await Effect.runPromise(
+			generateShoppingList('user-a', now).pipe(
+				Effect.provide(Layer.mergeAll(shoppingListLayer, foodItemLayer, recipeLayer))
+			)
+		);
+
+		expect((capturedItems as { quantity: unknown }[])[0].quantity).toEqual({
+			value: 500,
+			unit: 'ml'
+		});
+	});
 });
 
 describe('completeShoppingTrip', () => {
@@ -538,11 +696,15 @@ describe('completeShoppingTrip', () => {
 		expect(trashedIds).toEqual([10]);
 	});
 
-	it('creates a replacement food item for checked restock items with null expiration', async () => {
+	it('creates a replacement food item using the shopping item quantity', async () => {
+		const restockItem: ShoppingListItem = {
+			...baseRestockShoppingItem,
+			quantity: { value: 500, unit: 'ml' as const }
+		};
 		const createdInputs: CreateFoodItemInput[] = [];
 
 		const shoppingListLayer = makeShoppingListRepo({
-			findAll: () => Effect.succeed([baseRestockShoppingItem]),
+			findAll: () => Effect.succeed([restockItem]),
 			clearAll: () => Effect.void
 		});
 		const foodItemLayer = makeFoodItemRepo({
@@ -565,7 +727,7 @@ describe('completeShoppingTrip', () => {
 			name: 'Milk',
 			canonicalName: 'milk',
 			storageLocation: 'fridge',
-			quantity: { value: 1, unit: 'count' },
+			quantity: { value: 500, unit: 'ml' },
 			expirationDate: null
 		});
 	});
@@ -782,7 +944,7 @@ describe('generateShoppingList after completeShoppingTrip (integration)', () => 
 			sourceRestockItemId: null,
 			sourceRecipeNames: ['Roast Chicken'],
 			carriedStorageLocation: 'fridge',
-			carriedTrackingType: 'count',
+			quantity: { value: 1, unit: 'count' as const },
 			createdAt: now
 		};
 
@@ -791,7 +953,7 @@ describe('generateShoppingList after completeShoppingTrip (integration)', () => 
 			name: 'Chicken Breasts',
 			canonicalName: null,
 			storageLocation: 'fridge',
-			quantity: { value: 1, unit: 'count' },
+			quantity: { value: 500, unit: 'g' },
 			expirationDate: null
 		};
 

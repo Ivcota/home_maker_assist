@@ -1,8 +1,6 @@
 import type { Quantity } from '$lib/domain/shared/quantity.js';
 
 export type StorageLocation = 'pantry' | 'fridge' | 'freezer';
-// TrackingType is kept for shopping list backward compatibility (to be removed in issue #73)
-export type TrackingType = 'amount' | 'count';
 
 export interface FoodItem {
 	id: number;

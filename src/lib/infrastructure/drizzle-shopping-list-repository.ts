@@ -23,7 +23,7 @@ function rowToItem(row: typeof shoppingListItem.$inferSelect): ShoppingListItem 
 		sourceRestockItemId: row.sourceRestockItemId,
 		sourceRecipeNames: row.sourceRecipeNames ?? null,
 		carriedStorageLocation: row.carriedStorageLocation,
-		carriedTrackingType: row.carriedTrackingType,
+		quantity: { value: Number(row.quantityValue), unit: row.quantityUnit as 'ml' | 'g' | 'count' },
 		createdAt: row.createdAt
 	};
 }
@@ -64,7 +64,8 @@ export const DrizzleShoppingListRepository = Layer.effect(
 									sourceType: 'restock' as const,
 									sourceRestockItemId: item.sourceRestockItemId,
 									carriedStorageLocation: item.carriedStorageLocation,
-									carriedTrackingType: item.carriedTrackingType
+									quantityValue: String(item.quantity.value),
+									quantityUnit: item.quantity.unit
 								}))
 							)
 							.onConflictDoNothing();
@@ -111,12 +112,17 @@ export const DrizzleShoppingListRepository = Layer.effect(
 									sourceType: 'recipe' as const,
 									sourceRecipeNames: item.sourceRecipeNames,
 									carriedStorageLocation: item.carriedStorageLocation,
-									carriedTrackingType: item.carriedTrackingType
+									quantityValue: String(item.quantity.value),
+									quantityUnit: item.quantity.unit
 								}))
 							)
 							.onConflictDoUpdate({
 								target: [shoppingListItem.userId, shoppingListItem.canonicalKey],
-								set: { sourceRecipeNames: sql`excluded.source_recipe_names` }
+								set: {
+									sourceRecipeNames: sql`excluded.source_recipe_names`,
+									quantityValue: sql`excluded.quantity_value`,
+									quantityUnit: sql`excluded.quantity_unit`
+								}
 							});
 					},
 					catch: (e) =>
