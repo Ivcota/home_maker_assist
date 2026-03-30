@@ -2,27 +2,34 @@ import { Layer, Effect } from 'effect';
 import { eq, and, isNull, isNotNull, gte, inArray } from 'drizzle-orm';
 import { RecipeRepository } from '$lib/domain/recipe/recipe-repository.js';
 import { RecipeRepositoryError, RecipeNotFoundError } from '$lib/domain/recipe/errors.js';
-import type { Recipe, RecipeIngredient } from '$lib/domain/recipe/recipe.js';
+import type { Recipe, Ingredient, Note } from '$lib/domain/recipe/recipe.js';
+import type { Quantity } from '$lib/domain/shared/quantity.js';
 import { Database, type DatabaseInstance } from './database.js';
-import { recipe, recipeIngredient } from '$lib/server/db/schema.js';
+import { recipe, recipeIngredient, recipeNote } from '$lib/server/db/schema.js';
 
 function rowsToRecipe(
 	recipeRow: typeof recipe.$inferSelect,
-	ingredientRows: (typeof recipeIngredient.$inferSelect)[]
+	ingredientRows: (typeof recipeIngredient.$inferSelect)[],
+	noteRows: (typeof recipeNote.$inferSelect)[]
 ): Recipe {
-	const ingredients: RecipeIngredient[] = ingredientRows.map((row) => ({
+	const ingredients: Ingredient[] = ingredientRows.map((row) => ({
 		id: row.id,
 		recipeId: row.recipeId,
 		name: row.name,
-		canonicalName: row.canonicalName,
-		quantity: row.quantity,
-		unit: row.unit
+		canonicalIngredientId: row.canonicalIngredientId,
+		quantity: { value: Number(row.quantityValue), unit: row.quantityUnit } as Quantity
+	}));
+	const notes: Note[] = noteRows.map((row) => ({
+		id: row.id,
+		recipeId: row.recipeId,
+		text: row.text
 	}));
 	return {
 		id: recipeRow.id,
 		userId: recipeRow.userId,
 		name: recipeRow.name,
 		ingredients,
+		notes,
 		pinnedAt: recipeRow.pinnedAt,
 		trashedAt: recipeRow.trashedAt,
 		createdAt: recipeRow.createdAt,
@@ -36,18 +43,29 @@ async function fetchWithIngredients(
 ): Promise<Recipe[]> {
 	if (recipeRows.length === 0) return [];
 	const ids = recipeRows.map((r) => r.id);
-	const allIngredients = await db
-		.select()
-		.from(recipeIngredient)
-		.where(
-			ids.length === 1
-				? eq(recipeIngredient.recipeId, ids[0])
-				: inArray(recipeIngredient.recipeId, ids)
-		);
+	const [allIngredients, allNotes] = await Promise.all([
+		db
+			.select()
+			.from(recipeIngredient)
+			.where(
+				ids.length === 1
+					? eq(recipeIngredient.recipeId, ids[0])
+					: inArray(recipeIngredient.recipeId, ids)
+			),
+		db
+			.select()
+			.from(recipeNote)
+			.where(
+				ids.length === 1
+					? eq(recipeNote.recipeId, ids[0])
+					: inArray(recipeNote.recipeId, ids)
+			)
+	]);
 	return recipeRows.map((r) =>
 		rowsToRecipe(
 			r,
-			allIngredients.filter((i) => i.recipeId === r.id)
+			allIngredients.filter((i) => i.recipeId === r.id),
+			allNotes.filter((n) => n.recipeId === r.id)
 		)
 	);
 }
@@ -106,15 +124,28 @@ export const DrizzleRecipeRepository = Layer.effect(
 												input.ingredients.map((ing) => ({
 													recipeId: recipeRow.id,
 													name: ing.name,
-													canonicalName: ing.canonicalName,
-													quantity: ing.quantity,
-													unit: ing.unit
+													canonicalIngredientId: ing.canonicalIngredientId ?? null,
+													quantityValue: String(ing.quantity.value),
+													quantityUnit: ing.quantity.unit
 												}))
 											)
 											.returning()
 									: [];
 
-							return rowsToRecipe(recipeRow, ingredientRows);
+							const noteRows =
+								input.notes.length > 0
+									? await tx
+											.insert(recipeNote)
+											.values(
+												input.notes.map((n) => ({
+													recipeId: recipeRow.id,
+													text: n.text
+												}))
+											)
+											.returning()
+									: [];
+
+							return rowsToRecipe(recipeRow, ingredientRows, noteRows);
 						}),
 					catch: (e) =>
 						new RecipeRepositoryError({ message: 'Failed to create recipe', cause: e })
@@ -151,6 +182,10 @@ export const DrizzleRecipeRepository = Layer.effect(
 									.delete(recipeIngredient)
 									.where(eq(recipeIngredient.recipeId, input.id));
 
+								await tx
+									.delete(recipeNote)
+									.where(eq(recipeNote.recipeId, input.id));
+
 								const ingredientRows =
 									input.ingredients.length > 0
 										? await tx
@@ -159,15 +194,28 @@ export const DrizzleRecipeRepository = Layer.effect(
 													input.ingredients.map((ing) => ({
 														recipeId: input.id,
 														name: ing.name,
-														canonicalName: ing.canonicalName,
-														quantity: ing.quantity,
-														unit: ing.unit
+														canonicalIngredientId: ing.canonicalIngredientId ?? null,
+														quantityValue: String(ing.quantity.value),
+														quantityUnit: ing.quantity.unit
 													}))
 												)
 												.returning()
 										: [];
 
-								return rowsToRecipe(recipeRow, ingredientRows);
+								const noteRows =
+									input.notes.length > 0
+										? await tx
+												.insert(recipeNote)
+												.values(
+													input.notes.map((n) => ({
+														recipeId: input.id,
+														text: n.text
+													}))
+												)
+												.returning()
+										: [];
+
+								return rowsToRecipe(recipeRow, ingredientRows, noteRows);
 							}),
 						catch: (e) =>
 							new RecipeRepositoryError({ message: 'Failed to update recipe', cause: e })

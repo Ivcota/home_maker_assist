@@ -14,7 +14,7 @@ import {
 	unpinRecipe
 } from '$lib/domain/recipe/use-cases';
 import { findAllFoodItems } from '$lib/domain/inventory/use-cases';
-import type { CreateRecipeIngredientInput } from '$lib/domain/recipe/recipe';
+import type { CreateIngredientInput, CreateNoteInput } from '$lib/domain/recipe/recipe';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = locals.user!.id;
@@ -41,10 +41,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return { recipes, trashedRecipes, foodItems };
 };
 
-function parseIngredients(formData: FormData): CreateRecipeIngredientInput[] | null {
+function parseIngredients(formData: FormData): CreateIngredientInput[] | null {
 	const raw = formData.get('ingredients')?.toString() ?? '[]';
 	try {
-		return JSON.parse(raw) as CreateRecipeIngredientInput[];
+		return JSON.parse(raw) as CreateIngredientInput[];
+	} catch {
+		return null;
+	}
+}
+
+function parseNotes(formData: FormData): CreateNoteInput[] | null {
+	const raw = formData.get('notes')?.toString() ?? '[]';
+	try {
+		return JSON.parse(raw) as CreateNoteInput[];
 	} catch {
 		return null;
 	}
@@ -59,12 +68,14 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const name = formData.get('name')?.toString() ?? '';
 		const ingredients = parseIngredients(formData);
+		const notes = parseNotes(formData);
 
 		if (!ingredients) return fail(400, { message: 'Invalid ingredients data' });
+		if (!notes) return fail(400, { message: 'Invalid notes data' });
 
 		const outcome = await appRuntime.runPromise(
 			Effect.match(
-				withRequestLogging(createRecipe(userId, { name, ingredients }), {
+				withRequestLogging(createRecipe(userId, { name, ingredients, notes }), {
 					...ctx,
 					useCase: 'createRecipe'
 				}),
@@ -93,12 +104,14 @@ export const actions: Actions = {
 
 		const name = formData.get('name')?.toString() ?? '';
 		const ingredients = parseIngredients(formData);
+		const notes = parseNotes(formData);
 
 		if (!ingredients) return fail(400, { message: 'Invalid ingredients data' });
+		if (!notes) return fail(400, { message: 'Invalid notes data' });
 
 		const outcome = await appRuntime.runPromise(
 			Effect.match(
-				withRequestLogging(updateRecipe(userId, { id, name, ingredients }), {
+				withRequestLogging(updateRecipe(userId, { id, name, ingredients, notes }), {
 					...ctx,
 					useCase: 'updateRecipe'
 				}),

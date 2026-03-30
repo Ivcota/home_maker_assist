@@ -17,6 +17,7 @@ const baseRecipe: Recipe = {
 	userId: 'user-a',
 	name: 'Test Recipe',
 	ingredients: [],
+	notes: [],
 	pinnedAt: null,
 	trashedAt: null,
 	createdAt: new Date(),
@@ -44,7 +45,10 @@ describe('createRecipe', () => {
 		const layer = makeRepo({ create: () => Effect.succeed(baseRecipe) });
 
 		const error = await Effect.runPromise(
-			createRecipe('user-a', { name: '  ', ingredients: [] }).pipe(Effect.flip, Effect.provide(layer))
+			createRecipe('user-a', { name: '  ', ingredients: [], notes: [] }).pipe(
+				Effect.flip,
+				Effect.provide(layer)
+			)
 		);
 
 		expect(error).toBeInstanceOf(RecipeValidationError);
@@ -56,7 +60,22 @@ describe('createRecipe', () => {
 		const error = await Effect.runPromise(
 			createRecipe('user-a', {
 				name: 'Valid Name',
-				ingredients: [{ name: '', canonicalName: null, quantity: null, unit: null }]
+				ingredients: [{ name: '', quantity: { value: 1, unit: 'count' } }],
+				notes: []
+			}).pipe(Effect.flip, Effect.provide(layer))
+		);
+
+		expect(error).toBeInstanceOf(RecipeValidationError);
+	});
+
+	it('fails with RecipeValidationError for empty note text', async () => {
+		const layer = makeRepo({ create: () => Effect.succeed(baseRecipe) });
+
+		const error = await Effect.runPromise(
+			createRecipe('user-a', {
+				name: 'Valid Name',
+				ingredients: [],
+				notes: [{ text: '   ' }]
 			}).pipe(Effect.flip, Effect.provide(layer))
 		);
 
@@ -73,7 +92,10 @@ describe('createRecipe', () => {
 		});
 
 		await Effect.runPromise(
-			createRecipe('user-a', { name: '', ingredients: [] }).pipe(Effect.ignore, Effect.provide(layer))
+			createRecipe('user-a', { name: '', ingredients: [], notes: [] }).pipe(
+				Effect.ignore,
+				Effect.provide(layer)
+			)
 		);
 
 		expect(repoCalled).toBe(false);
@@ -85,7 +107,7 @@ describe('updateRecipe', () => {
 		const layer = makeRepo({ update: () => Effect.succeed(baseRecipe) });
 
 		const error = await Effect.runPromise(
-			updateRecipe('user-a', { id: 1, name: '', ingredients: [] }).pipe(
+			updateRecipe('user-a', { id: 1, name: '', ingredients: [], notes: [] }).pipe(
 				Effect.flip,
 				Effect.provide(layer)
 			)
@@ -101,7 +123,8 @@ describe('updateRecipe', () => {
 			updateRecipe('user-a', {
 				id: 1,
 				name: 'Valid Name',
-				ingredients: [{ name: '   ', canonicalName: null, quantity: null, unit: null }]
+				ingredients: [{ name: '   ', quantity: { value: 1, unit: 'count' } }],
+				notes: []
 			}).pipe(Effect.flip, Effect.provide(layer))
 		);
 

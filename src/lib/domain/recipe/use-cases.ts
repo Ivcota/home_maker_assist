@@ -13,6 +13,7 @@ export const RESTORE_WINDOW_HOURS = 24;
 function validateFields(input: {
 	name: string;
 	ingredients: { name: string }[];
+	notes: { text: string }[];
 }): Effect.Effect<void, RecipeValidationError> {
 	return Effect.gen(function* () {
 		if (!input.name.trim()) {
@@ -23,6 +24,11 @@ function validateFields(input: {
 				yield* Effect.fail(
 					new RecipeValidationError({ message: 'Ingredient name must not be empty' })
 				);
+			}
+		}
+		for (const note of input.notes) {
+			if (!note.text.trim()) {
+				yield* Effect.fail(new RecipeValidationError({ message: 'Note text must not be empty' }));
 			}
 		}
 	});

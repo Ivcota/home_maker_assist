@@ -1,8 +1,8 @@
-import type { RecipeIngredient } from './recipe.js';
+import type { Ingredient } from './recipe.js';
 import type { FoodItem } from '$lib/domain/inventory/food-item.js';
 
 export interface IngredientMatch {
-	ingredient: RecipeIngredient;
+	ingredient: Ingredient;
 	matched: boolean;
 }
 
@@ -14,27 +14,31 @@ export interface RecipeReadiness {
 	status: ReadinessStatus;
 }
 
-function ingredientKey(ingredient: RecipeIngredient): string {
-	return (ingredient.canonicalName ?? ingredient.name).toLowerCase().trim();
-}
-
-function foodItemKey(item: FoodItem): string {
-	return (item.canonicalName ?? item.name).toLowerCase().trim();
+function matchIngredientToFoodItems(ingredient: Ingredient, foodItems: FoodItem[]): boolean {
+	return foodItems.some((fi) => {
+		// If both have canonical IDs, match strictly by ID
+		if (ingredient.canonicalIngredientId !== null && fi.canonicalIngredientId !== null) {
+			return ingredient.canonicalIngredientId === fi.canonicalIngredientId;
+		}
+		// Otherwise fall back to case-insensitive name comparison
+		const ingredientName = ingredient.name.toLowerCase().trim();
+		const fiKey = (fi.canonicalName ?? fi.name).toLowerCase().trim();
+		return fiKey === ingredientName;
+	});
 }
 
 export function matchIngredients(
-	ingredients: RecipeIngredient[],
+	ingredients: Ingredient[],
 	foodItems: FoodItem[]
 ): IngredientMatch[] {
-	const foodItemKeys = new Set(foodItems.map(foodItemKey));
 	return ingredients.map((ingredient) => ({
 		ingredient,
-		matched: foodItemKeys.has(ingredientKey(ingredient))
+		matched: matchIngredientToFoodItems(ingredient, foodItems)
 	}));
 }
 
 export function calculateReadiness(
-	ingredients: RecipeIngredient[],
+	ingredients: Ingredient[],
 	foodItems: FoodItem[]
 ): RecipeReadiness {
 	const total = ingredients.length;

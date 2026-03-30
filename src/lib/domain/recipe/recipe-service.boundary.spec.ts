@@ -30,6 +30,12 @@ CREATE TABLE IF NOT EXISTS "user" (
   "updated_at" timestamp DEFAULT now() NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "canonical_ingredient" (
+  "id" serial PRIMARY KEY NOT NULL,
+  "name" text NOT NULL UNIQUE,
+  "unit_category" text NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS "recipe" (
   "id" serial PRIMARY KEY NOT NULL,
   "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
@@ -44,9 +50,15 @@ CREATE TABLE IF NOT EXISTS "recipe_ingredient" (
   "id" serial PRIMARY KEY NOT NULL,
   "recipe_id" integer NOT NULL REFERENCES "recipe"("id") ON DELETE CASCADE,
   "name" text NOT NULL,
-  "canonical_name" text,
-  "quantity" text,
-  "unit" text
+  "canonical_ingredient_id" integer REFERENCES "canonical_ingredient"("id"),
+  "quantity_value" numeric NOT NULL,
+  "quantity_unit" text NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "recipe_note" (
+  "id" serial PRIMARY KEY NOT NULL,
+  "recipe_id" integer NOT NULL REFERENCES "recipe"("id") ON DELETE CASCADE,
+  "text" text NOT NULL
 );
 `;
 
@@ -85,8 +97,8 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 			.values({ userId: USER_A, name: 'Pasta' })
 			.returning();
 		await db.insert(schema.recipeIngredient).values([
-			{ recipeId: recipeRow.id, name: 'Flour', quantity: '200', unit: 'g' },
-			{ recipeId: recipeRow.id, name: 'Eggs', quantity: '2', unit: null }
+			{ recipeId: recipeRow.id, name: 'Flour', quantityValue: '200', quantityUnit: 'g' },
+			{ recipeId: recipeRow.id, name: 'Eggs', quantityValue: '2', quantityUnit: 'count' }
 		]);
 
 		const recipes = await run(findAllRecipes(USER_A));
@@ -174,7 +186,7 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 			.returning();
 		await db
 			.insert(schema.recipeIngredient)
-			.values({ recipeId: recipeRow.id, name: 'Sugar', quantity: '100', unit: 'g' });
+			.values({ recipeId: recipeRow.id, name: 'Sugar', quantityValue: '100', quantityUnit: 'g' });
 
 		const recipes = await run(findTrashedRecipes(USER_A));
 
@@ -189,9 +201,10 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 				createRecipe(USER_A, {
 					name: 'Omelette',
 					ingredients: [
-						{ name: 'Eggs', canonicalName: null, quantity: '3', unit: null },
-						{ name: 'Butter', canonicalName: null, quantity: '10', unit: 'g' }
-					]
+						{ name: 'Eggs', quantity: { value: 3, unit: 'count' } },
+						{ name: 'Butter', quantity: { value: 10, unit: 'g' } }
+					],
+					notes: []
 				})
 			);
 
@@ -210,15 +223,30 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 		});
 
 		it('persists recipe with no ingredients', async () => {
-			const result = await run(createRecipe(USER_A, { name: 'Plain Dish', ingredients: [] }));
+			const result = await run(
+				createRecipe(USER_A, { name: 'Plain Dish', ingredients: [], notes: [] })
+			);
 
 			expect(result.name).toBe('Plain Dish');
 			expect(result.ingredients).toHaveLength(0);
 		});
 
+		it('persists recipe with notes', async () => {
+			const result = await run(
+				createRecipe(USER_A, {
+					name: 'Seasoned Dish',
+					ingredients: [{ name: 'Chicken', quantity: { value: 500, unit: 'g' } }],
+					notes: [{ text: 'Season to taste' }, { text: 'Oil for frying' }]
+				})
+			);
+
+			expect(result.notes).toHaveLength(2);
+			expect(result.notes.map((n) => n.text).sort()).toEqual(['Oil for frying', 'Season to taste']);
+		});
+
 		it('fails with RecipeValidationError for empty recipe name', async () => {
 			const error = await Effect.runPromise(
-				createRecipe(USER_A, { name: '  ', ingredients: [] }).pipe(
+				createRecipe(USER_A, { name: '  ', ingredients: [], notes: [] }).pipe(
 					Effect.flip,
 					Effect.provide(testLayer)
 				)
@@ -235,7 +263,8 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 			const error = await Effect.runPromise(
 				createRecipe(USER_A, {
 					name: 'Valid',
-					ingredients: [{ name: '', canonicalName: null, quantity: null, unit: null }]
+					ingredients: [{ name: '', quantity: { value: 1, unit: 'count' } }],
+					notes: []
 				}).pipe(Effect.flip, Effect.provide(testLayer))
 			);
 
@@ -256,9 +285,8 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 				{
 					recipeId: recipeRow.id,
 					name: 'Old Ingredient',
-					canonicalName: null,
-					quantity: null,
-					unit: null
+					quantityValue: '1',
+					quantityUnit: 'count'
 				}
 			]);
 
@@ -267,9 +295,10 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 					id: recipeRow.id,
 					name: 'New Name',
 					ingredients: [
-						{ name: 'New Ingredient A', canonicalName: null, quantity: '1', unit: 'cup' },
-						{ name: 'New Ingredient B', canonicalName: null, quantity: null, unit: null }
-					]
+						{ name: 'New Ingredient A', quantity: { value: 1, unit: 'ml' } },
+						{ name: 'New Ingredient B', quantity: { value: 2, unit: 'count' } }
+					],
+					notes: []
 				})
 			);
 
@@ -290,7 +319,7 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 
 		it('fails with RecipeNotFoundError for non-existent recipe', async () => {
 			const error = await Effect.runPromise(
-				updateRecipe(USER_A, { id: 99999, name: 'X', ingredients: [] }).pipe(
+				updateRecipe(USER_A, { id: 99999, name: 'X', ingredients: [], notes: [] }).pipe(
 					Effect.flip,
 					Effect.provide(testLayer)
 				)
@@ -306,10 +335,12 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 				.returning();
 
 			const error = await Effect.runPromise(
-				updateRecipe(USER_A, { id: recipeRow.id, name: 'Hijacked', ingredients: [] }).pipe(
-					Effect.flip,
-					Effect.provide(testLayer)
-				)
+				updateRecipe(USER_A, {
+					id: recipeRow.id,
+					name: 'Hijacked',
+					ingredients: [],
+					notes: []
+				}).pipe(Effect.flip, Effect.provide(testLayer))
 			);
 
 			expect(error).toBeInstanceOf(RecipeNotFoundError);
@@ -322,7 +353,7 @@ describe('Recipe use-cases (boundary — PGLite)', () => {
 				.returning();
 
 			const error = await Effect.runPromise(
-				updateRecipe(USER_A, { id: recipeRow.id, name: '', ingredients: [] }).pipe(
+				updateRecipe(USER_A, { id: recipeRow.id, name: '', ingredients: [], notes: [] }).pipe(
 					Effect.flip,
 					Effect.provide(testLayer)
 				)

@@ -17,9 +17,7 @@
 	interface ReviewIngredient {
 		localId: number;
 		name: string;
-		canonicalName: string | null;
-		quantity: string | null;
-		unit: string | null;
+		canonicalIngredientId: number | null;
 	}
 
 	interface BatchRecipe {
@@ -139,12 +137,7 @@
 
 				const recipes = (await res.json()) as Array<{
 					name: string;
-					ingredients: Array<{
-						name: string;
-						canonicalName: string | null;
-						quantity: string | null;
-						unit: string | null;
-					}>;
+					ingredients: Array<{ name: string }>;
 				}>;
 
 				for (const recipe of recipes) {
@@ -154,9 +147,7 @@
 						ingredients: recipe.ingredients.map((ing) => ({
 							localId: nextLocalId++,
 							name: ing.name,
-							canonicalName: ing.canonicalName,
-							quantity: ing.quantity,
-							unit: ing.unit
+							canonicalIngredientId: null
 						}))
 					});
 				}
@@ -196,9 +187,7 @@
 			recipe.ingredients.push({
 				localId: nextLocalId++,
 				name: '',
-				canonicalName: null,
-				quantity: null,
-				unit: null
+				canonicalIngredientId: null
 			});
 	}
 
@@ -215,9 +204,7 @@
 		editIngredients = recipe.ingredients.map((ing) => ({
 			localId: nextLocalId++,
 			name: ing.name,
-			canonicalName: ing.canonicalName,
-			quantity: ing.quantity,
-			unit: ing.unit
+			canonicalIngredientId: ing.canonicalIngredientId
 		}));
 	}
 
@@ -231,9 +218,7 @@
 		editIngredients.push({
 			localId: nextLocalId++,
 			name: '',
-			canonicalName: null,
-			quantity: null,
-			unit: null
+			canonicalIngredientId: null
 		});
 	}
 
@@ -246,9 +231,8 @@
 		JSON.stringify(
 			editIngredients.map((i) => ({
 				name: i.name,
-				canonicalName: i.canonicalName,
-				quantity: i.quantity,
-				unit: i.unit
+				canonicalIngredientId: i.canonicalIngredientId,
+				quantity: { value: 1, unit: 'count' }
 			}))
 		)
 	);
@@ -414,9 +398,8 @@
 				{@const ingredientsJson = JSON.stringify(
 					batchRecipe.ingredients.map((i) => ({
 						name: i.name,
-						canonicalName: i.canonicalName,
-						quantity: i.quantity,
-						unit: i.unit
+						canonicalIngredientId: i.canonicalIngredientId,
+						quantity: { value: 1, unit: 'count' }
 					}))
 				)}
 				{@const duplicateName = batchDuplicates.get(batchRecipe.batchId)}
@@ -473,6 +456,7 @@
 							(id) => removeBatchIngredient(batchRecipe.batchId, id)
 						)}
 						<input type="hidden" name="ingredients" value={ingredientsJson} />
+						<input type="hidden" name="notes" value="[]" />
 						<button
 							type="submit"
 							class="w-full rounded-xl bg-[#5c4a2a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4a3a1f]"
@@ -518,6 +502,7 @@
 				</div>
 				{@render ingredientEditor(editIngredients, addEditIngredient, removeEditIngredient)}
 				<input type="hidden" name="ingredients" value={ingredientsJsonForEdit} />
+				<input type="hidden" name="notes" value="[]" />
 				<div class="flex gap-2">
 					<button
 						type="button"
@@ -688,13 +673,9 @@
 													</svg>
 													<span class="text-[#8a7a6a]">{match.ingredient.name}</span>
 												{/if}
-												{#if match.ingredient.quantity || match.ingredient.unit}
-													<span class="ml-auto text-xs text-[#b0a090]">
-														{[match.ingredient.quantity, match.ingredient.unit]
-															.filter(Boolean)
-															.join(' ')}
-													</span>
-												{/if}
+												<span class="ml-auto text-xs text-[#b0a090]">
+													{match.ingredient.quantity.value} {match.ingredient.quantity.unit}
+												</span>
 											</li>
 										{/each}
 									</ul>
@@ -772,16 +753,6 @@
 						bind:value={ing.name}
 						placeholder="Ingredient name"
 						class="min-w-0 flex-1 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
-					/>
-					<input
-						bind:value={ing.quantity}
-						placeholder="Qty"
-						class="w-16 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
-					/>
-					<input
-						bind:value={ing.unit}
-						placeholder="Unit"
-						class="w-16 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
 					/>
 					<button
 						type="button"

@@ -51,9 +51,17 @@ export const recipeIngredient = pgTable('recipe_ingredient', {
 		.notNull()
 		.references(() => recipe.id, { onDelete: 'cascade' }),
 	name: text('name').notNull(),
-	canonicalName: text('canonical_name'),
-	quantity: text('quantity'),
-	unit: text('unit')
+	canonicalIngredientId: integer('canonical_ingredient_id').references(() => canonicalIngredient.id),
+	quantityValue: numeric('quantity_value').notNull(),
+	quantityUnit: text('quantity_unit').notNull()
+});
+
+export const recipeNote = pgTable('recipe_note', {
+	id: serial('id').primaryKey(),
+	recipeId: integer('recipe_id')
+		.notNull()
+		.references(() => recipe.id, { onDelete: 'cascade' }),
+	text: text('text').notNull()
 });
 
 export const shoppingListSourceTypeEnum = pgEnum('shopping_list_source_type', ['restock', 'recipe']);

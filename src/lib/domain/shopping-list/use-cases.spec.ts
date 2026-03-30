@@ -53,6 +53,7 @@ function makeRecipe(overrides: Partial<Recipe> = {}): Recipe {
 		userId: 'user-a',
 		name: 'Pasta',
 		ingredients: [],
+		notes: [],
 		pinnedAt: now,
 		trashedAt: null,
 		createdAt: now,
@@ -311,7 +312,7 @@ describe('generateShoppingList', () => {
 		const recipe = makeRecipe({
 			id: 1,
 			name: 'Pasta',
-			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalName: 'flour', quantity: null, unit: null }]
+			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 1, unit: 'count' as const } }]
 		});
 		let capturedRecipeItems: RecipeShoppingItemInput[] | null = null;
 
@@ -343,8 +344,8 @@ describe('generateShoppingList', () => {
 	it('excludes ingredients that are already in inventory', async () => {
 		const recipe = makeRecipe({
 			ingredients: [
-				{ id: 1, recipeId: 1, name: 'Flour', canonicalName: 'flour', quantity: null, unit: null },
-				{ id: 2, recipeId: 1, name: 'Sugar', canonicalName: 'sugar', quantity: null, unit: null }
+				{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 1, unit: 'count' as const } },
+				{ id: 2, recipeId: 1, name: 'Sugar', canonicalIngredientId: null, quantity: { value: 1, unit: 'count' as const } }
 			]
 		});
 		const flourInInventory = makeFoodItem({ id: 2, name: 'Flour', canonicalName: 'flour', expirationDate: freshDate });
@@ -376,7 +377,7 @@ describe('generateShoppingList', () => {
 	it('does not add ingredients from unpinned recipes', async () => {
 		const unpinnedRecipe = makeRecipe({
 			pinnedAt: null,
-			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalName: 'flour', quantity: null, unit: null }]
+			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 1, unit: 'count' as const } }]
 		});
 		let mergeCallCount = 0;
 
@@ -404,7 +405,7 @@ describe('generateShoppingList', () => {
 		const trashedRecipe = makeRecipe({
 			pinnedAt: now,
 			trashedAt: now,
-			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalName: 'flour', quantity: null, unit: null }]
+			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 1, unit: 'count' as const } }]
 		});
 		let mergeCallCount = 0;
 
@@ -479,12 +480,12 @@ describe('generateShoppingList', () => {
 		const recipe1 = makeRecipe({
 			id: 1,
 			name: 'Pasta',
-			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalName: 'flour', quantity: null, unit: null }]
+			ingredients: [{ id: 1, recipeId: 1, name: 'Flour', canonicalIngredientId: null, quantity: { value: 1, unit: 'count' as const } }]
 		});
 		const recipe2 = makeRecipe({
 			id: 2,
 			name: 'Pancakes',
-			ingredients: [{ id: 2, recipeId: 2, name: 'Flour', canonicalName: 'flour', quantity: null, unit: null }]
+			ingredients: [{ id: 2, recipeId: 2, name: 'Flour', canonicalIngredientId: null, quantity: { value: 1, unit: 'count' as const } }]
 		});
 		let capturedRecipeItems: RecipeShoppingItemInput[] | null = null;
 
@@ -759,22 +760,22 @@ describe('completeShoppingTrip', () => {
 });
 
 describe('generateShoppingList after completeShoppingTrip (integration)', () => {
-	it('does not re-add recipe ingredients that were just purchased when canonicalName differs from display name', async () => {
-		// Simulates the bug scenario: ingredient has canonicalName "chicken" but displayName "Chicken Breasts"
-		// After purchasing, the food item should be found by matchIngredients using "chicken" key
+	it('does not re-add recipe ingredients that were just purchased', async () => {
+		// Simulates scenario: ingredient 'Chicken Breasts' is purchased and added to inventory
+		// After purchasing, the food item should be found by matchIngredients using name
 		const recipe = makeRecipe({
 			id: 1,
 			name: 'Roast Chicken',
 			ingredients: [
-				{ id: 1, recipeId: 1, name: 'Chicken Breasts', canonicalName: 'chicken', quantity: null, unit: null }
+				{ id: 1, recipeId: 1, name: 'Chicken Breasts', canonicalIngredientId: null, quantity: { value: 500, unit: 'g' as const } }
 			]
 		});
 
-		// Shopping list item that was generated (canonical key is 'chicken', display name is 'Chicken Breasts')
+		// Shopping list item that was generated (canonical key is 'chicken breasts', display name is 'Chicken Breasts')
 		const shoppingItem: ShoppingListItem = {
 			id: 5,
 			userId: 'user-a',
-			canonicalKey: 'chicken',
+			canonicalKey: 'chicken breasts',
 			displayName: 'Chicken Breasts',
 			checked: true,
 			sourceType: 'recipe',
@@ -828,8 +829,8 @@ describe('generateShoppingList after completeShoppingTrip (integration)', () => 
 			)
 		);
 
-		// The created food item must have canonicalName: 'chicken' for the matching to work
-		expect(createdFoodItems[0].canonicalName).toBe('chicken');
+		// The created food item must have canonicalName set from the shopping list item's canonicalKey
+		expect(createdFoodItems[0].canonicalName).toBe('chicken breasts');
 
 		// Step 2: generateShoppingList — with the created food item in inventory,
 		// 'Chicken Breasts' (canonical key 'chicken') should NOT reappear

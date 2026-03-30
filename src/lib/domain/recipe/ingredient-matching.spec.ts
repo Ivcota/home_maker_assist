@@ -1,12 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { matchIngredients, calculateReadiness } from './ingredient-matching.js';
-import type { RecipeIngredient } from './recipe.js';
+import type { Ingredient } from './recipe.js';
 import type { FoodItem } from '$lib/domain/inventory/food-item.js';
 
 const now = new Date();
 
-function makeIngredient(overrides: Partial<RecipeIngredient> & { name: string }): RecipeIngredient {
-	return { id: 1, recipeId: 1, canonicalName: null, quantity: null, unit: null, ...overrides };
+function makeIngredient(overrides: Partial<Ingredient> & { name: string }): Ingredient {
+	return {
+		id: 1,
+		recipeId: 1,
+		canonicalIngredientId: null,
+		quantity: { value: 1, unit: 'count' },
+		...overrides
+	};
 }
 
 function makeFoodItem(overrides: Partial<FoodItem> & { name: string }): FoodItem {
@@ -26,41 +32,44 @@ function makeFoodItem(overrides: Partial<FoodItem> & { name: string }): FoodItem
 }
 
 describe('matchIngredients', () => {
-	it('matches by canonicalName when both are set', () => {
-		const ingredients = [makeIngredient({ name: 'all-purpose flour', canonicalName: 'flour' })];
-		const foodItems = [makeFoodItem({ name: 'Bread Flour', canonicalName: 'flour' })];
+	it('matches by canonicalIngredientId when both are set', () => {
+		const ingredients = [makeIngredient({ name: 'all-purpose flour', canonicalIngredientId: 5 })];
+		const foodItems = [makeFoodItem({ name: 'Bread Flour', canonicalIngredientId: 5 })];
 		const result = matchIngredients(ingredients, foodItems);
 		expect(result).toEqual([{ ingredient: ingredients[0], matched: true }]);
 	});
 
-	it('falls back to lowercased display name when canonicalName is null', () => {
-		const ingredients = [makeIngredient({ name: 'Butter', canonicalName: null })];
-		const foodItems = [makeFoodItem({ name: 'butter', canonicalName: null })];
+	it('does not match when both have canonical IDs but they differ', () => {
+		const ingredients = [makeIngredient({ name: 'flour', canonicalIngredientId: 5 })];
+		const foodItems = [makeFoodItem({ name: 'flour', canonicalIngredientId: 6 })];
+		const result = matchIngredients(ingredients, foodItems);
+		expect(result[0].matched).toBe(false);
+	});
+
+	it('falls back to name comparison when canonicalIngredientId is null on ingredient', () => {
+		const ingredients = [makeIngredient({ name: 'Butter', canonicalIngredientId: null })];
+		const foodItems = [makeFoodItem({ name: 'butter', canonicalIngredientId: null })];
 		const result = matchIngredients(ingredients, foodItems);
 		expect(result[0].matched).toBe(true);
 	});
 
-	it('matching is case-insensitive', () => {
-		const ingredients = [makeIngredient({ name: 'MILK', canonicalName: null })];
-		const foodItems = [makeFoodItem({ name: 'Milk', canonicalName: null })];
+	it('name matching is case-insensitive', () => {
+		const ingredients = [makeIngredient({ name: 'MILK', canonicalIngredientId: null })];
+		const foodItems = [makeFoodItem({ name: 'Milk', canonicalIngredientId: null })];
 		expect(matchIngredients(ingredients, foodItems)[0].matched).toBe(true);
 	});
 
 	it('does not match when no food item has the ingredient', () => {
-		const ingredients = [makeIngredient({ name: 'truffle oil', canonicalName: 'truffle oil' })];
-		const foodItems = [makeFoodItem({ name: 'olive oil', canonicalName: 'olive oil' })];
+		const ingredients = [makeIngredient({ name: 'truffle oil', canonicalIngredientId: null })];
+		const foodItems = [makeFoodItem({ name: 'olive oil', canonicalIngredientId: null })];
 		expect(matchIngredients(ingredients, foodItems)[0].matched).toBe(false);
 	});
 
-	it('matches ingredient canonicalName against food item display name fallback', () => {
-		const ingredients = [makeIngredient({ name: 'chicken thighs', canonicalName: 'chicken' })];
-		const foodItems = [makeFoodItem({ name: 'chicken', canonicalName: null })];
-		expect(matchIngredients(ingredients, foodItems)[0].matched).toBe(true);
-	});
-
-	it('matches food item canonicalName against ingredient display name fallback', () => {
-		const ingredients = [makeIngredient({ name: 'chicken', canonicalName: null })];
-		const foodItems = [makeFoodItem({ name: 'Whole Chicken', canonicalName: 'chicken' })];
+	it('falls back to food item canonicalName for name comparison', () => {
+		const ingredients = [makeIngredient({ name: 'chicken', canonicalIngredientId: null })];
+		const foodItems = [
+			makeFoodItem({ name: 'Whole Chicken', canonicalName: 'chicken', canonicalIngredientId: null })
+		];
 		expect(matchIngredients(ingredients, foodItems)[0].matched).toBe(true);
 	});
 
@@ -71,13 +80,13 @@ describe('matchIngredients', () => {
 
 	it('handles multiple ingredients with partial matches', () => {
 		const ingredients = [
-			makeIngredient({ name: 'flour', canonicalName: 'flour' }),
-			makeIngredient({ name: 'egg', canonicalName: 'egg' }),
-			makeIngredient({ name: 'truffle', canonicalName: 'truffle' })
+			makeIngredient({ name: 'flour', canonicalIngredientId: 1 }),
+			makeIngredient({ name: 'egg', canonicalIngredientId: 2 }),
+			makeIngredient({ name: 'truffle', canonicalIngredientId: 3 })
 		];
 		const foodItems = [
-			makeFoodItem({ name: 'flour', canonicalName: 'flour' }),
-			makeFoodItem({ name: 'eggs', canonicalName: 'egg' })
+			makeFoodItem({ name: 'flour', canonicalIngredientId: 1 }),
+			makeFoodItem({ name: 'eggs', canonicalIngredientId: 2 })
 		];
 		const result = matchIngredients(ingredients, foodItems);
 		expect(result[0].matched).toBe(true);
@@ -88,8 +97,8 @@ describe('matchIngredients', () => {
 
 describe('calculateReadiness', () => {
 	it('returns ready when all ingredients are matched', () => {
-		const ingredients = [makeIngredient({ name: 'flour', canonicalName: 'flour' })];
-		const foodItems = [makeFoodItem({ name: 'flour', canonicalName: 'flour' })];
+		const ingredients = [makeIngredient({ name: 'flour', canonicalIngredientId: 1 })];
+		const foodItems = [makeFoodItem({ name: 'flour', canonicalIngredientId: 1 })];
 		const result = calculateReadiness(ingredients, foodItems);
 		expect(result).toEqual({ matched: 1, total: 1, status: 'ready' });
 	});
@@ -101,27 +110,27 @@ describe('calculateReadiness', () => {
 
 	it('returns almost-ready when >= 50% matched', () => {
 		const ingredients = [
-			makeIngredient({ name: 'a', canonicalName: 'a' }),
-			makeIngredient({ name: 'b', canonicalName: 'b' })
+			makeIngredient({ name: 'a', canonicalIngredientId: 1 }),
+			makeIngredient({ name: 'b', canonicalIngredientId: 2 })
 		];
-		const foodItems = [makeFoodItem({ name: 'a', canonicalName: 'a' })];
+		const foodItems = [makeFoodItem({ name: 'a', canonicalIngredientId: 1 })];
 		const result = calculateReadiness(ingredients, foodItems);
 		expect(result).toEqual({ matched: 1, total: 2, status: 'almost-ready' });
 	});
 
 	it('returns need-to-shop when < 50% matched', () => {
 		const ingredients = [
-			makeIngredient({ name: 'a', canonicalName: 'a' }),
-			makeIngredient({ name: 'b', canonicalName: 'b' }),
-			makeIngredient({ name: 'c', canonicalName: 'c' })
+			makeIngredient({ name: 'a', canonicalIngredientId: 1 }),
+			makeIngredient({ name: 'b', canonicalIngredientId: 2 }),
+			makeIngredient({ name: 'c', canonicalIngredientId: 3 })
 		];
-		const foodItems = [makeFoodItem({ name: 'a', canonicalName: 'a' })];
+		const foodItems = [makeFoodItem({ name: 'a', canonicalIngredientId: 1 })];
 		const result = calculateReadiness(ingredients, foodItems);
 		expect(result).toEqual({ matched: 1, total: 3, status: 'need-to-shop' });
 	});
 
 	it('returns need-to-shop when nothing matched', () => {
-		const ingredients = [makeIngredient({ name: 'saffron', canonicalName: 'saffron' })];
+		const ingredients = [makeIngredient({ name: 'saffron', canonicalIngredientId: null })];
 		const result = calculateReadiness(ingredients, []);
 		expect(result).toEqual({ matched: 0, total: 1, status: 'need-to-shop' });
 	});
