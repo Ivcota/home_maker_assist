@@ -42,6 +42,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					if (e._tag === 'UnreadableImageError' || e._tag === 'NoItemsExtractedError') {
 						return { ok: false as const, status: 422 as const };
 					}
+					console.error(e.cause);
 					return { ok: false as const, status: 503 as const };
 				},
 				onSuccess: (recipes) => ({ ok: true as const, recipes })
