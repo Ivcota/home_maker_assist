@@ -62,5 +62,19 @@ export const actions: Actions = {
 		}
 
 		return redirect(302, redirectTo);
+	},
+	forgotPassword: async (event) => {
+		const formData = await event.request.formData();
+		const email = formData.get('email')?.toString() ?? '';
+
+		try {
+			await auth.api.requestPasswordReset({
+				body: { email, redirectTo: '/reset-password' }
+			});
+		} catch {
+			// Always return success to prevent account enumeration
+		}
+
+		return { success: true };
 	}
 };
