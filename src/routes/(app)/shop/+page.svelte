@@ -144,11 +144,11 @@
 
 	<!-- Done shopping button -->
 	{#if hasCheckedItems}
-		<div class="fixed bottom-16 left-0 right-0 flex justify-center p-5">
-			<form method="POST" action="?/completeShopping" use:enhance>
+		<div class="fixed bottom-16 left-0 right-0 flex justify-center px-6 pb-5">
+			<form method="POST" action="?/completeShopping" use:enhance class="w-full max-w-5xl">
 				<button
 					type="submit"
-					class="w-[85%] max-w-5xl rounded-2xl bg-[#2c2416] px-6 py-4 text-base font-semibold text-white shadow-lg active:bg-[#3d3420]"
+					class="w-full rounded-2xl bg-[#2c2416] px-6 py-4 text-lg font-semibold text-white shadow-lg active:bg-[#3d3420]"
 				>
 					Done shopping
 				</button>
