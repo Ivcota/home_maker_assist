@@ -355,7 +355,18 @@ export const DrizzleRecipeRepository = Layer.effect(
 						catch: (e) =>
 							new RecipeRepositoryError({ message: 'Failed to unpin recipe', cause: e })
 					});
-				})
+				}),
+
+			unpinAll: (userId) =>
+				Effect.tryPromise({
+					try: () =>
+						db
+							.update(recipe)
+							.set({ pinnedAt: null, updatedAt: new Date() })
+							.where(and(eq(recipe.userId, userId), isNotNull(recipe.pinnedAt))),
+					catch: (e) =>
+						new RecipeRepositoryError({ message: 'Failed to unpin all recipes', cause: e })
+				}).pipe(Effect.asVoid)
 		};
 	})
 );

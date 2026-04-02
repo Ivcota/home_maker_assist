@@ -11,7 +11,7 @@ import type { FoodItemRepositoryError } from '$lib/domain/inventory/errors.js';
 import { getRestockItems } from '$lib/domain/inventory/restock.js';
 import { DEFAULT_EXPIRATION_CONFIG } from '$lib/domain/inventory/expiration.js';
 import { RecipeRepository } from '$lib/domain/recipe/recipe-repository.js';
-import type { RecipeRepositoryError } from '$lib/domain/recipe/errors.js';
+import type { RecipeNotFoundError, RecipeRepositoryError } from '$lib/domain/recipe/errors.js';
 import { matchIngredients } from '$lib/domain/recipe/ingredient-matching.js';
 import { subtract, sum, type Quantity } from '$lib/domain/shared/quantity.js';
 
@@ -138,10 +138,12 @@ export const generateShoppingList = (
 
 export const completeShoppingTrip = (
 	userId: string
-): Effect.Effect<void, ShoppingListRepositoryError, ShoppingListRepository> =>
+): Effect.Effect<void, ShoppingListRepositoryError | RecipeRepositoryError, ShoppingListRepository | RecipeRepository> =>
 	Effect.gen(function* () {
 		const shoppingListRepo = yield* ShoppingListRepository;
+		const recipeRepo = yield* RecipeRepository;
 		yield* shoppingListRepo.clearAll(userId);
+		yield* recipeRepo.unpinAll(userId);
 	});
 
 export const setShoppingListItemChecked = (

@@ -34,5 +34,8 @@ export class RecipeRepository extends Context.Tag('RecipeRepository')<
 			userId: string,
 			id: number
 		) => Effect.Effect<void, RecipeNotFoundError | RecipeRepositoryError>;
+		readonly unpinAll: (
+			userId: string
+		) => Effect.Effect<void, RecipeRepositoryError>;
 	}
 >() {}

@@ -88,6 +88,7 @@ function makeRecipeRepo(overrides: Partial<Context.Tag.Service<RecipeRepository>
 		restore: noop,
 		pin: noop,
 		unpin: noop,
+		unpinAll: noop,
 		...overrides
 	} as Context.Tag.Service<RecipeRepository>);
 }
@@ -631,6 +632,28 @@ describe('generateShoppingList', () => {
 });
 
 describe('completeShoppingTrip', () => {
+	it('unpins all pinned recipes', async () => {
+		let unpinnedAll = false;
+
+		const shoppingListLayer = makeShoppingListRepo({
+			clearAll: () => Effect.void
+		});
+		const recipeLayer = makeRecipeRepo({
+			unpinAll: () => {
+				unpinnedAll = true;
+				return Effect.void;
+			}
+		});
+
+		await Effect.runPromise(
+			completeShoppingTrip('user-a').pipe(
+				Effect.provide(Layer.mergeAll(shoppingListLayer, recipeLayer))
+			)
+		);
+
+		expect(unpinnedAll).toBe(true);
+	});
+
 	it('clears checked items on completion', async () => {
 		let cleared = false;
 
@@ -640,23 +663,33 @@ describe('completeShoppingTrip', () => {
 				return Effect.void;
 			}
 		});
+		const recipeLayer = makeRecipeRepo({
+			unpinAll: () => Effect.void
+		});
 
 		await Effect.runPromise(
-			completeShoppingTrip('user-a').pipe(Effect.provide(shoppingListLayer))
+			completeShoppingTrip('user-a').pipe(
+				Effect.provide(Layer.mergeAll(shoppingListLayer, recipeLayer))
+			)
 		);
 
 		expect(cleared).toBe(true);
 	});
 
 	it('unchecked items remain after completion (clearAll only removes checked)', async () => {
-		// clearAll is mocked as a no-op; the use case must not call any delete on unchecked items
 		const shoppingListLayer = makeShoppingListRepo({
 			clearAll: () => Effect.void
 		});
+		const recipeLayer = makeRecipeRepo({
+			unpinAll: () => Effect.void
+		});
 
-		// Should complete without error — no additional operations on unchecked items
 		await expect(
-			Effect.runPromise(completeShoppingTrip('user-a').pipe(Effect.provide(shoppingListLayer)))
+			Effect.runPromise(
+				completeShoppingTrip('user-a').pipe(
+					Effect.provide(Layer.mergeAll(shoppingListLayer, recipeLayer))
+				)
+			)
 		).resolves.toBeUndefined();
 	});
 
@@ -664,9 +697,16 @@ describe('completeShoppingTrip', () => {
 		const shoppingListLayer = makeShoppingListRepo({
 			clearAll: () => Effect.void
 		});
+		const recipeLayer = makeRecipeRepo({
+			unpinAll: () => Effect.void
+		});
 
 		await expect(
-			Effect.runPromise(completeShoppingTrip('user-a').pipe(Effect.provide(shoppingListLayer)))
+			Effect.runPromise(
+				completeShoppingTrip('user-a').pipe(
+					Effect.provide(Layer.mergeAll(shoppingListLayer, recipeLayer))
+				)
+			)
 		).resolves.toBeUndefined();
 	});
 });
