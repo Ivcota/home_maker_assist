@@ -95,7 +95,7 @@
 	/>
 </svelte:head>
 
-<main class="mx-auto max-w-lg px-4 pt-6 pb-32">
+<main class="mx-auto w-[85%] max-w-5xl pt-6 pb-32">
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="font-[Cormorant_Garamond,serif] text-3xl font-semibold text-[#2c2416]">
 			Shopping List
@@ -202,7 +202,7 @@
 			<button
 				type="button"
 				onclick={openReviewOrSubmit}
-				class="w-full max-w-lg rounded-2xl bg-[#2c2416] px-6 py-4 text-base font-semibold text-white shadow-lg active:bg-[#3d3420]"
+				class="w-[85%] max-w-5xl rounded-2xl bg-[#2c2416] px-6 py-4 text-base font-semibold text-white shadow-lg active:bg-[#3d3420]"
 			>
 				Done shopping
 			</button>

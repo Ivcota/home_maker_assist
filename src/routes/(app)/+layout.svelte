@@ -24,7 +24,7 @@
 	<AppHeader user={data.user} />
 	{@render children()}
 	<nav class="fixed right-0 bottom-0 left-0 z-40 border-t border-[#e8e2d9] bg-white">
-		<div class="mx-auto flex max-w-lg">
+		<div class="mx-auto flex w-[85%] max-w-5xl">
 			{#each navItems as item}
 				{@const active = page.url.pathname.startsWith(item.href)}
 				<a

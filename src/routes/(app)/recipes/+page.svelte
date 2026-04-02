@@ -323,7 +323,7 @@
 	</div>
 {/if}
 
-<main class="mx-auto max-w-lg px-4 pt-6 pb-24">
+<main class="mx-auto w-[85%] max-w-5xl pt-6 pb-24">
 	<div class="mb-4 flex items-center justify-between">
 		<h1 class="font-[Cormorant_Garamond,serif] text-3xl font-semibold text-[#2c2416]">Recipes</h1>
 
