@@ -143,11 +143,12 @@
 		return new Date(date).toISOString().split('T')[0];
 	}
 
-	// Receipt scanning state
+	// Scanning state (shared between receipt and food photo scan)
 	let scanning = $state(false);
 	let scanError = $state<string | null>(null);
 	let scannedItems = $state<ExtractedFoodItem[]>([]);
 	let fileInput = $state<HTMLInputElement | undefined>();
+	let foodFileInput = $state<HTMLInputElement | undefined>();
 
 	// Bulk submission state (populated by ScanReviewModal onsubmit)
 	let pendingBulkItems = $state<SelectedItem[]>([]);
@@ -159,11 +160,52 @@
 		fileInput?.click();
 	}
 
+	function triggerFoodScan() {
+		scanError = null;
+		foodFileInput?.click();
+	}
+
 	$effect(() => {
-		if (page.url.searchParams.get('scan') === 'receipt' && fileInput) {
+		const scanParam = page.url.searchParams.get('scan');
+		if (scanParam === 'receipt' && fileInput) {
 			triggerScan();
+		} else if (scanParam === 'food' && foodFileInput) {
+			triggerFoodScan();
 		}
 	});
+
+	async function handleScanResponse(res: Response, inputEl: HTMLInputElement | undefined) {
+		if (!res.ok) {
+			const text = await res.text().catch(() => '');
+			scanError =
+				text.includes("Couldn't extract") || res.status === 422
+					? "Couldn't extract any items from this image. Try a clearer photo."
+					: 'Something went wrong. Try again in a moment.';
+			return;
+		}
+
+		const rawItems = (await res.json()) as Array<{
+			name: string;
+			canonicalName: string | null;
+			storageLocation: StorageLocation;
+			quantity: { value: number; unit: string };
+			expirationDate: string | null;
+		}>;
+
+		if (rawItems.length === 0) {
+			scanError = "Couldn't extract any items from this image. Try a clearer photo.";
+			return;
+		}
+
+		scannedItems = rawItems.map((item) => ({
+			name: item.name,
+			canonicalName: item.canonicalName,
+			storageLocation: item.storageLocation,
+			quantity: { value: item.quantity.value, unit: item.quantity.unit as QuantityUnit },
+			expirationDate: item.expirationDate ? new Date(item.expirationDate) : null
+		}));
+		if (inputEl) inputEl.value = '';
+	}
 
 	async function handleFileSelected(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
@@ -186,41 +228,42 @@
 
 		try {
 			const res = await fetch('/api/scan-receipt', { method: 'POST', body });
-
-			if (!res.ok) {
-				const text = await res.text().catch(() => '');
-				scanError =
-					text.includes("Couldn't extract") || res.status === 422
-						? "Couldn't extract any items from this image. Try a clearer photo."
-						: 'Something went wrong. Try again in a moment.';
-				return;
-			}
-
-			const rawItems = (await res.json()) as Array<{
-				name: string;
-				canonicalName: string | null;
-				storageLocation: StorageLocation;
-				quantity: { value: number; unit: string };
-				expirationDate: string | null;
-			}>;
-
-			if (rawItems.length === 0) {
-				scanError = "Couldn't extract any items from this image. Try a clearer photo.";
-				return;
-			}
-
-			scannedItems = rawItems.map((item) => ({
-				name: item.name,
-				canonicalName: item.canonicalName,
-				storageLocation: item.storageLocation,
-				quantity: { value: item.quantity.value, unit: item.quantity.unit as QuantityUnit },
-				expirationDate: item.expirationDate ? new Date(item.expirationDate) : null
-			}));
+			await handleScanResponse(res, fileInput);
 		} catch {
 			scanError = 'Something went wrong. Try again in a moment.';
 		} finally {
 			scanning = false;
 			if (fileInput) fileInput.value = '';
+		}
+	}
+
+	async function handleFoodFileSelected(e: Event) {
+		const file = (e.target as HTMLInputElement).files?.[0];
+		if (!file) return;
+
+		scanning = true;
+		scanError = null;
+
+		let imageFile: File;
+		try {
+			imageFile = await compressImage(file);
+		} catch {
+			scanError = 'Could not process this image. Try a different photo.';
+			scanning = false;
+			return;
+		}
+
+		const body = new FormData();
+		body.append('image', imageFile);
+
+		try {
+			const res = await fetch('/api/scan-food', { method: 'POST', body });
+			await handleScanResponse(res, foodFileInput);
+		} catch {
+			scanError = 'Something went wrong. Try again in a moment.';
+		} finally {
+			scanning = false;
+			if (foodFileInput) foodFileInput.value = '';
 		}
 	}
 
@@ -521,9 +564,18 @@
 			bind:this={fileInput}
 			type="file"
 			accept="image/*"
-			capture="environment"
 			class="hidden"
 			onchange={handleFileSelected}
+		/>
+
+		<!-- Hidden file input for food photo scan (?scan=food deep-link and bottom sheet) -->
+		<input
+			bind:this={foodFileInput}
+			type="file"
+			accept="image/*"
+			capture="environment"
+			class="hidden"
+			onchange={handleFoodFileSelected}
 		/>
 
 		<!-- Receipt Review -->
@@ -848,13 +900,13 @@
 				Add Items
 			</h2>
 			<ul class="flex flex-col gap-3">
-				<!-- Scan Food Photo (placeholder) -->
+				<!-- Scan Food Photo -->
 				<li>
 					<button
 						type="button"
-						disabled
-						class="flex w-full items-center gap-4 rounded-xl border border-[#e8e2d9] bg-white px-5 py-4 text-left opacity-50 cursor-not-allowed"
-						aria-label="Scan Food Photo (coming soon)"
+						onclick={() => { closeSheet(); triggerFoodScan(); }}
+						class="flex w-full items-center gap-4 rounded-xl border border-[#e8e2d9] bg-white px-5 py-4 text-left transition-all duration-150 hover:border-[#c4a46a66] hover:bg-[#faf8f5] hover:shadow-sm"
+						aria-label="Scan Food Photo"
 					>
 						<span
 							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f0ebe4]"
@@ -878,8 +930,22 @@
 						</span>
 						<span>
 							<span class="block text-sm font-semibold text-[#1a1714]">Scan Food Photo</span>
-							<span class="block text-xs text-[#8a8279]">Coming soon</span>
+							<span class="block text-xs text-[#8a8279]">Photograph food to identify items</span>
 						</span>
+						<svg
+							class="ml-auto text-[#b5aea4]"
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<polyline points="9 18 15 12 9 6" />
+						</svg>
 					</button>
 				</li>
 
