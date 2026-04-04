@@ -3,13 +3,21 @@ import type { Actions, PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
 import { APIError } from 'better-auth/api';
 
+const INVITE_COOKIE = 'invite_code';
+
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
+		// If there's a pending invite, redirect to it so it can be processed
+		const inviteCode = event.cookies.get(INVITE_COOKIE);
+		if (inviteCode) {
+			return redirect(302, `/invite/${inviteCode}`);
+		}
 		return redirect(302, '/inventory');
 	}
 	return {
 		redirectTo: event.url.searchParams.get('redirectTo') ?? '/inventory',
-		initialMode: event.url.searchParams.has('forgot') ? 'forgot' : 'signin'
+		initialMode: (event.url.searchParams.get('mode') as 'signin' | 'signup' | null) ??
+			(event.url.searchParams.has('forgot') ? 'forgot' : 'signin')
 	};
 };
 
@@ -36,6 +44,12 @@ export const actions: Actions = {
 			return fail(500, { message: 'Unexpected error' });
 		}
 
+		// After sign-in, if there's a pending invite, redirect to it
+		const inviteCode = event.cookies.get(INVITE_COOKIE);
+		if (inviteCode) {
+			return redirect(302, `/invite/${inviteCode}`);
+		}
+
 		return redirect(302, redirectTo);
 	},
 	signUpEmail: async (event) => {
@@ -60,6 +74,12 @@ export const actions: Actions = {
 			}
 			console.error(`[${event.locals.requestId}] signUpEmail unexpected error:`, error);
 			return fail(500, { message: 'Unexpected error' });
+		}
+
+		// After sign-up, if there's a pending invite, redirect to it
+		const inviteCode = event.cookies.get(INVITE_COOKIE);
+		if (inviteCode) {
+			return redirect(302, `/invite/${inviteCode}`);
 		}
 
 		return redirect(302, redirectTo);

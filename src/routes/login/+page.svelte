@@ -4,7 +4,7 @@
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 	let mode: 'signin' | 'signup' | 'forgot' = $state(
-		(data.initialMode as 'signin' | 'forgot') ?? 'signin'
+		(data.initialMode as 'signin' | 'signup' | 'forgot') ?? 'signin'
 	);
 </script>
 

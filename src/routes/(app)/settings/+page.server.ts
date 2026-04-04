@@ -1,10 +1,28 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { Effect } from 'effect';
 import type { Actions, PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
 import { APIError } from 'better-auth/api';
+import { appRuntime } from '$lib/server/runtime';
+import { generateInviteCode } from '$lib/domain/household/use-cases.js';
+import { HouseholdRepository } from '$lib/domain/household/household-repository.js';
+import { NotHouseholdOwnerError } from '$lib/domain/household/errors.js';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	return { user: locals.user! };
+export const load: PageServerLoad = async ({ locals, url }) => {
+	let household = null;
+	if (locals.householdId) {
+		household = await appRuntime.runPromise(
+			Effect.gen(function* () {
+				const repo = yield* HouseholdRepository;
+				return yield* repo.findByUserId(locals.user!.id);
+			})
+		).catch(() => null);
+	}
+	return {
+		user: locals.user!,
+		household,
+		inviteGenerated: url.searchParams.get('inviteGenerated') ?? null
+	};
 };
 
 export const actions: Actions = {
@@ -67,6 +85,23 @@ export const actions: Actions = {
 		}
 
 		return { field: 'password', success: true };
+	},
+
+	generateInvite: async (event) => {
+		if (!event.locals.user || !event.locals.householdId) {
+			return fail(403, { field: 'invite', message: 'Not authorized' });
+		}
+		const result = await appRuntime.runPromise(
+			Effect.either(generateInviteCode(event.locals.householdId, event.locals.user.id))
+		);
+		if (result._tag === 'Left') {
+			const error = result.left;
+			if (error instanceof NotHouseholdOwnerError) {
+				return fail(403, { field: 'invite', message: 'Only household owners can generate invite links' });
+			}
+			return fail(500, { field: 'invite', message: 'Failed to generate invite link' });
+		}
+		return { field: 'invite', success: true, household: result.right };
 	},
 
 	signOut: async (event) => {
