@@ -76,38 +76,54 @@
 	{:else}
 		<div class="flex flex-col gap-2">
 			{#each uncheckedItems as item (item.id)}
-				<form
-					method="POST"
-					action="?/toggle"
-					use:enhance={() => {
-						handleToggle(item.id, true);
-						return async ({ update }) => update({ reset: false });
-					}}
-				>
-					<input type="hidden" name="id" value={item.id} />
-					<input type="hidden" name="checked" value="true" />
-					<button
-						type="submit"
-						class="flex w-full items-center gap-4 rounded-2xl border border-[#e8e2d9] bg-white px-5 py-4 text-left shadow-sm active:bg-[#f5f0ea]"
+				<div class="flex items-center gap-0 rounded-2xl border border-[#e8e2d9] bg-white shadow-sm">
+					<form
+						method="POST"
+						action="?/toggle"
+						class="min-w-0 flex-1"
+						use:enhance={() => {
+							handleToggle(item.id, true);
+							return async ({ update }) => update({ reset: false });
+						}}
 					>
-						<span
-							class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 border-[#c0a880]"
-						></span>
-						<span class="min-w-0 flex-1">
-							<span class="block text-base font-semibold text-[#2c2416]">{item.displayName}</span>
-							<span class="block text-sm text-[#8a7a6a]">
-								{formatQuantity(item.quantity)}
-								{#if item.sourceType === 'recipe'}
-									· {item.sourceRecipeNames?.join(' · ') ?? ''}
-								{:else if item.sourceRecipeNames && item.sourceRecipeNames.length > 0}
-									· Expiring · {item.sourceRecipeNames.join(' · ')}
-								{:else}
-									· Expiring
-								{/if}
+						<input type="hidden" name="id" value={item.id} />
+						<input type="hidden" name="checked" value="true" />
+						<button
+							type="submit"
+							class="flex w-full items-center gap-4 px-5 py-4 text-left active:bg-[#f5f0ea] rounded-l-2xl"
+						>
+							<span
+								class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 border-[#c0a880]"
+							></span>
+							<span class="min-w-0 flex-1">
+								<span class="block text-base font-semibold text-[#2c2416]">{item.displayName}</span>
+								<span class="block text-sm text-[#8a7a6a]">
+									{formatQuantity(item.quantity)}
+									{#if item.sourceType === 'recipe'}
+										· {item.sourceRecipeNames?.join(' · ') ?? ''}
+									{:else if item.sourceRecipeNames && item.sourceRecipeNames.length > 0}
+										· Expiring · {item.sourceRecipeNames.join(' · ')}
+									{:else}
+										· Expiring
+									{/if}
+								</span>
 							</span>
-						</span>
-					</button>
-				</form>
+						</button>
+					</form>
+					<a
+						href="https://www.walmart.com/search?q={encodeURIComponent(item.displayName)}"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex-shrink-0 px-4 py-4 text-[#c4a46a] hover:text-[#a8893e] active:text-[#a8893e]"
+						aria-label="Buy {item.displayName} on Walmart"
+					>
+						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="9" cy="21" r="1" />
+							<circle cx="20" cy="21" r="1" />
+							<path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+						</svg>
+					</a>
+				</div>
 			{/each}
 
 			{#if checkedItems.length > 0}
