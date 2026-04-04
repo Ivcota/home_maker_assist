@@ -10,6 +10,7 @@
 	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import ScanReviewModal, { type SelectedItem } from '$lib/components/ScanReviewModal.svelte';
 	import type { ExtractedFoodItem } from '$lib/domain/receipt/types.js';
+	import { createToastState } from '$lib/toast-state.svelte.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -47,38 +48,21 @@
 	}
 
 	// Toast state
-	interface Toast {
-		id: number;
-		message: string;
-		undoItem: FoodItem | null;
-		timeoutId: ReturnType<typeof setTimeout>;
-	}
-	let toasts = $state<Toast[]>([]);
-	let nextToastId = 0;
+	const toastState = createToastState();
+	let toasts = $derived(toastState.toasts);
 
 	function showTrashToast(item: FoodItem) {
-		const id = nextToastId++;
-		const timeoutId = setTimeout(() => dismissToast(id), 5000);
-		toasts.push({ id, message: `"${item.name}" moved to trash`, undoItem: item, timeoutId });
+		toastState.showToast(`"${item.name}" moved to trash`, { data: item });
 	}
 
 	function showBulkAddToast(count: number) {
-		const id = nextToastId++;
-		const timeoutId = setTimeout(() => dismissToast(id), 5000);
-		toasts.push({
-			id,
-			message: `${count} item${count === 1 ? '' : 's'} added from receipt`,
-			undoItem: null,
-			timeoutId
-		});
+		toastState.showToast(
+			`${count} item${count === 1 ? '' : 's'} added from receipt`
+		);
 	}
 
 	function dismissToast(id: number) {
-		const idx = toasts.findIndex((t) => t.id === id);
-		if (idx !== -1) {
-			clearTimeout(toasts[idx].timeoutId);
-			toasts.splice(idx, 1);
-		}
+		toastState.dismissToast(id);
 	}
 
 	let tabBarEl: HTMLDivElement;
@@ -145,10 +129,14 @@
 
 	// Scanning state (shared between receipt and food photo scan)
 	let scanning = $state(false);
-	let scanError = $state<string | null>(null);
 	let scannedItems = $state<ExtractedFoodItem[]>([]);
+	let lastScanType = $state<'receipt' | 'food' | null>(null);
 	let fileInput = $state<HTMLInputElement | undefined>();
 	let foodFileInput = $state<HTMLInputElement | undefined>();
+
+	// Form submission loading states
+	let manualSubmitting = $state(false);
+	let bulkSubmitting = $state(false);
 
 	// Bulk submission state (populated by ScanReviewModal onsubmit)
 	let pendingBulkItems = $state<SelectedItem[]>([]);
@@ -156,12 +144,10 @@
 	const pendingBulkJson = $derived(JSON.stringify(pendingBulkItems));
 
 	function triggerScan() {
-		scanError = null;
 		fileInput?.click();
 	}
 
 	function triggerFoodScan() {
-		scanError = null;
 		foodFileInput?.click();
 	}
 
@@ -174,13 +160,23 @@
 		}
 	});
 
+	function retryScan() {
+		if (lastScanType === 'receipt') triggerScan();
+		else if (lastScanType === 'food') triggerFoodScan();
+	}
+
+	function showScanError(message: string) {
+		toastState.showScanErrorToast(message, retryScan);
+	}
+
 	async function handleScanResponse(res: Response, inputEl: HTMLInputElement | undefined) {
 		if (!res.ok) {
 			const text = await res.text().catch(() => '');
-			scanError =
+			const message =
 				text.includes("Couldn't extract") || res.status === 422
 					? "Couldn't extract any items from this image. Try a clearer photo."
 					: 'Something went wrong. Try again in a moment.';
+			showScanError(message);
 			return;
 		}
 
@@ -193,7 +189,7 @@
 		}>;
 
 		if (rawItems.length === 0) {
-			scanError = "Couldn't extract any items from this image. Try a clearer photo.";
+			showScanError("Couldn't extract any items from this image. Try a clearer photo.");
 			return;
 		}
 
@@ -212,13 +208,15 @@
 		if (!file) return;
 
 		scanning = true;
-		scanError = null;
+		lastScanType = 'receipt';
+		const scanToastId = toastState.showScanningToast('Scanning receipt...');
 
 		let imageFile: File;
 		try {
 			imageFile = await compressImage(file);
 		} catch {
-			scanError = 'Could not process this image. Try a different photo.';
+			showScanError('Could not process this image. Try a different photo.');
+			toastState.dismissToast(scanToastId);
 			scanning = false;
 			return;
 		}
@@ -230,8 +228,9 @@
 			const res = await fetch('/api/scan-receipt', { method: 'POST', body });
 			await handleScanResponse(res, fileInput);
 		} catch {
-			scanError = 'Something went wrong. Try again in a moment.';
+			showScanError('Something went wrong. Try again in a moment.');
 		} finally {
+			toastState.dismissToast(scanToastId);
 			scanning = false;
 			if (fileInput) fileInput.value = '';
 		}
@@ -242,13 +241,15 @@
 		if (!file) return;
 
 		scanning = true;
-		scanError = null;
+		lastScanType = 'food';
+		const scanToastId = toastState.showScanningToast('Scanning food photo...');
 
 		let imageFile: File;
 		try {
 			imageFile = await compressImage(file);
 		} catch {
-			scanError = 'Could not process this image. Try a different photo.';
+			showScanError('Could not process this image. Try a different photo.');
+			toastState.dismissToast(scanToastId);
 			scanning = false;
 			return;
 		}
@@ -260,8 +261,9 @@
 			const res = await fetch('/api/scan-food', { method: 'POST', body });
 			await handleScanResponse(res, foodFileInput);
 		} catch {
-			scanError = 'Something went wrong. Try again in a moment.';
+			showScanError('Something went wrong. Try again in a moment.');
 		} finally {
+			toastState.dismissToast(scanToastId);
 			scanning = false;
 			if (foodFileInput) foodFileInput.value = '';
 		}
@@ -276,7 +278,6 @@
 
 	function handleScanReviewCancel() {
 		scannedItems = [];
-		scanError = null;
 	}
 </script>
 
@@ -293,11 +294,25 @@
 {#if toasts.length > 0}
 	<div class="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2">
 		{#each toasts as toast (toast.id)}
+			{@const undoItem = toast.data as FoodItem | undefined}
 			<div
-				class="flex items-center gap-3 rounded-xl border border-[#e8e2d9] bg-white px-4 py-3 shadow-lg"
+				class="flex items-center gap-3 rounded-xl border px-4 py-3 shadow-lg {toast.variant === 'error' ? 'border-red-200 bg-red-50' : 'border-[#e8e2d9] bg-white'}"
 			>
-				<span class="text-sm text-[#3a3632]">{toast.message}</span>
-				{#if toast.undoItem}
+				{#if !toast.dismissable}
+					<!-- Scanning spinner -->
+					<div class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[#c4a46a] border-t-transparent"></div>
+				{/if}
+				<span class="text-sm {toast.variant === 'error' ? 'text-red-700' : 'text-[#3a3632]'}">{toast.message}</span>
+				{#if toast.action}
+					<button
+						type="button"
+						onclick={() => toastState.invokeAction(toast.id)}
+						class="shrink-0 whitespace-nowrap rounded-lg bg-[#c4a46a] px-3 py-1.5 text-xs font-semibold text-[#1a1714] transition-colors hover:bg-[#d4b87a]"
+					>
+						{toast.action.label}
+					</button>
+				{/if}
+				{#if undoItem?.trashedAt !== undefined}
 					<form
 						method="post"
 						action="?/restore"
@@ -308,11 +323,11 @@
 							};
 						}}
 					>
-						<input type="hidden" name="id" value={toast.undoItem.id} />
+						<input type="hidden" name="id" value={undoItem.id} />
 						<input
 							type="hidden"
 							name="trashedAt"
-							value={toast.undoItem.trashedAt?.toISOString() ?? ''}
+							value={undoItem.trashedAt?.toISOString() ?? ''}
 						/>
 						<button
 							type="submit"
@@ -322,26 +337,28 @@
 						</button>
 					</form>
 				{/if}
-				<button
-					type="button"
-					onclick={() => dismissToast(toast.id)}
-					class="ml-1 text-[#b5aea4] hover:text-[#3a3632]"
-					aria-label="Dismiss"
-				>
-					<svg
-						width="14"
-						height="14"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true"
+				{#if toast.dismissable}
+					<button
+						type="button"
+						onclick={() => dismissToast(toast.id)}
+						class="ml-1 text-[#b5aea4] hover:text-[#3a3632]"
+						aria-label="Dismiss"
 					>
-						<path d="M18 6L6 18M6 6l12 12" />
-					</svg>
-				</button>
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M18 6L6 18M6 6l12 12" />
+						</svg>
+					</button>
+				{/if}
 			</div>
 		{/each}
 	</div>
@@ -582,6 +599,7 @@
 		{#if scannedItems.length > 0}
 			<ScanReviewModal
 				items={scannedItems}
+				submitting={bulkSubmitting}
 				onsubmit={handleScanReviewSubmit}
 				oncancel={handleScanReviewCancel}
 			/>
@@ -599,7 +617,9 @@
 			bind:this={bulkFormEl}
 			class="hidden"
 			use:enhance={() => {
+				bulkSubmitting = true;
 				return ({ result, update }) => {
+					bulkSubmitting = false;
 					if (result.type !== 'failure') {
 						const count =
 							result.type === 'success' && result.data
@@ -1073,24 +1093,13 @@
 				</h2>
 			</div>
 
-			<!-- Shimmer loading bar (shown if scanning in background) -->
-			{#if scanning}
-				<div class="mb-4 h-1 w-full overflow-hidden rounded-full bg-[#e8e2d9]">
-					<div class="scan-shimmer h-full w-1/3 rounded-full bg-[#c4a46a]"></div>
-				</div>
-			{/if}
-
-			{#if scanError}
-				<p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-sm text-red-600">
-					{scanError}
-				</p>
-			{/if}
-
 			<form
 				method="post"
 				action="?/create"
 				use:enhance={() => {
+					manualSubmitting = true;
 					return ({ result, update }) => {
+						manualSubmitting = false;
 						if (result.type !== 'failure') {
 							resetAddForm();
 							closeSheet();
@@ -1200,9 +1209,15 @@
 				<div class="flex items-center gap-4 pb-2">
 					<button
 						type="submit"
-						class="rounded-lg bg-[#c4a46a] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#1a1714] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#d4b87a] hover:shadow-md active:translate-y-0"
+						disabled={manualSubmitting}
+						class="flex items-center gap-2 rounded-lg bg-[#c4a46a] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#1a1714] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#d4b87a] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
 					>
-						Add Item
+						{#if manualSubmitting}
+							<div class="h-4 w-4 animate-spin rounded-full border-2 border-[#1a1714] border-t-transparent"></div>
+							Adding...
+						{:else}
+							Add Item
+						{/if}
 					</button>
 					{#if form?.message}
 						<p class="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-sm text-red-600">
@@ -1257,17 +1272,6 @@
 {/if}
 
 <style>
-	@keyframes shimmer {
-		0% {
-			transform: translateX(-200%);
-		}
-		100% {
-			transform: translateX(500%);
-		}
-	}
-	.scan-shimmer {
-		animation: shimmer 1.5s ease-in-out infinite;
-	}
 	.scrollbar-hide {
 		-ms-overflow-style: none;
 		scrollbar-width: none;

@@ -25,10 +25,12 @@
 
 	let {
 		items,
+		submitting = false,
 		onsubmit,
 		oncancel
 	}: {
 		items: ExtractedFoodItem[];
+		submitting?: boolean;
 		onsubmit: (selectedItems: SelectedItem[]) => void;
 		oncancel: () => void;
 	} = $props();
@@ -241,10 +243,15 @@
 			<button
 				type="button"
 				onclick={handleSubmit}
-				disabled={checkedCount === 0}
-				class="rounded-lg bg-[#c4a46a] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#1a1714] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#d4b87a] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+				disabled={checkedCount === 0 || submitting}
+				class="flex items-center gap-2 rounded-lg bg-[#c4a46a] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#1a1714] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#d4b87a] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
 			>
-				Add {checkedCount} Item{checkedCount === 1 ? '' : 's'}
+				{#if submitting}
+					<div class="h-4 w-4 animate-spin rounded-full border-2 border-[#1a1714] border-t-transparent"></div>
+					Adding...
+				{:else}
+					Add {checkedCount} Item{checkedCount === 1 ? '' : 's'}
+				{/if}
 			</button>
 		</div>
 	</div>
