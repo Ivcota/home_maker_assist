@@ -15,6 +15,7 @@ import type { ExtractionError } from '$lib/domain/receipt/errors.js';
 import type { ExtractedFoodItem } from '$lib/domain/receipt/types.js';
 import { normalizeUnit, UnknownUnitError } from '$lib/infrastructure/unit-normalizer.js';
 import type { Quantity } from '$lib/domain/shared/quantity.js';
+import { RECEIPT_SCAN_SYSTEM_PROMPT } from '$lib/domain/receipt/prompts.js';
 
 export interface RawExtractedItem {
 	name: string;
@@ -74,27 +75,6 @@ const extractedFoodItemSchema = z.object({
 	daysToExpiration: z.number().nullable()
 });
 
-const SYSTEM_PROMPT = `You are a food item extractor. Extract all food items from the receipt image.
-
-For each item:
-- name: Expand abbreviations to full product names (e.g. "WHL MLK" → "Whole Milk", "CHKN BRST" → "Chicken Breast")
-- canonicalName: A normalized ingredient name for recipe matching (lowercase, generic, no brand or descriptor). Examples: "Whole Milk" → "milk", "Chicken Breast" → "chicken", "Unsalted Butter" → "butter", "All-Purpose Flour" → "flour". Null if not a basic ingredient.
-- storageLocation: infer from category:
-  - dairy, meat, produce, deli → "fridge"
-  - frozen items → "freezer"
-  - everything else (canned, dry goods, snacks, beverages, condiments) → "pantry"
-- quantityValue: the numeric quantity from the receipt; default to 1 if not shown
-- quantityUnit: the unit of measurement. Use standard units: "each" for discrete items (bottles, boxes, bags, cans), "lb", "oz", "g", "kg" for weight, "gal", "qt", "pt", "cup", "fl oz", "l", "ml" for volume. Default to "each" if unclear.
-- daysToExpiration: estimate how many days until the item expires, using your judgment per item. Examples for guidance:
-  - dairy: ~12 days
-  - produce: ~6 days
-  - meat/poultry/seafood: ~4 days
-  - frozen: ~90 days
-  - canned or dry goods: ~730 days
-  - other: null
-
-Return only items that are clearly food products.`;
-
 export const AIReceiptScanner: ReceiptScannerService = {
 	extractItems: (input) =>
 		Effect.tryPromise({
@@ -103,7 +83,7 @@ export const AIReceiptScanner: ReceiptScannerService = {
 					model: createAnthropic({ apiKey: ANTHROPIC_API_KEY })('claude-sonnet-4-6'),
 					output: 'array',
 					schema: extractedFoodItemSchema,
-					system: SYSTEM_PROMPT,
+					system: RECEIPT_SCAN_SYSTEM_PROMPT,
 					messages: [
 						{
 							role: 'user',
