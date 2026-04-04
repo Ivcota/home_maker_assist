@@ -11,6 +11,7 @@
 	import ScanReviewModal, { type SelectedItem } from '$lib/components/ScanReviewModal.svelte';
 	import type { ExtractedFoodItem } from '$lib/domain/receipt/types.js';
 	import { createToastState } from '$lib/toast-state.svelte.js';
+	import { clearScanParam } from '$lib/scan-utils.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -621,6 +622,7 @@
 				return ({ result, update }) => {
 					bulkSubmitting = false;
 					if (result.type !== 'failure') {
+						clearScanParam();
 						const count =
 							result.type === 'success' && result.data
 								? (result.data as { count: number }).count
