@@ -8,6 +8,15 @@ import {
 
 const { mockExtractItems } = vi.hoisted(() => ({ mockExtractItems: vi.fn() }));
 
+vi.mock('$lib/server/runtime.js', async () => {
+	const { Effect } = await import('effect');
+	return {
+		appRuntime: {
+			runPromise: (effect: unknown) => Effect.runPromise(effect as Parameters<typeof Effect.runPromise>[0])
+		}
+	};
+});
+
 vi.mock('$lib/infrastructure/ai-food-photo-scanner.js', async () => {
 	const { Layer } = await import('effect');
 	const { ReceiptScanner } = await import('$lib/domain/receipt/receipt-scanner.js');
