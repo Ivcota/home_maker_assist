@@ -1,5 +1,5 @@
 import { pgTable, serial, integer, text, timestamp, numeric, pgEnum, boolean, unique } from 'drizzle-orm/pg-core';
-import { user } from './auth.schema.js';
+import { user, household } from './auth.schema.js';
 
 export const storageLocationEnum = pgEnum('storage_location', ['pantry', 'fridge', 'freezer']);
 export const trackingTypeEnum = pgEnum('tracking_type', ['amount', 'count']);
@@ -9,6 +9,7 @@ export const task = pgTable('task', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
+	householdId: text('household_id').references(() => household.id),
 	title: text('title').notNull(),
 	priority: integer('priority').notNull().default(1),
 	completedAt: timestamp('completed_at'),
@@ -20,6 +21,7 @@ export const foodItem = pgTable('food_item', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
+	householdId: text('household_id').references(() => household.id),
 	name: text('name').notNull(),
 	canonicalName: text('canonical_name'),
 	storageLocation: storageLocationEnum('storage_location').notNull(),
@@ -37,6 +39,7 @@ export const recipe = pgTable('recipe', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
+	householdId: text('household_id').references(() => household.id),
 	name: text('name').notNull(),
 	pinnedAt: timestamp('pinned_at'),
 	trashedAt: timestamp('trashed_at'),
@@ -71,6 +74,7 @@ export const shoppingListItem = pgTable('shopping_list_item', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
+	householdId: text('household_id').references(() => household.id),
 	canonicalKey: text('canonical_key').notNull(),
 	displayName: text('display_name').notNull(),
 	checked: boolean('checked').notNull().default(false),

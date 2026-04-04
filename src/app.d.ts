@@ -8,6 +8,7 @@ declare global {
 			user?: User;
 			session?: Session;
 			requestId: string;
+			householdId?: string;
 		}
 
 		// interface Error {}

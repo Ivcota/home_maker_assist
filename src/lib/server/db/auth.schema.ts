@@ -1,5 +1,16 @@
 import { relations } from 'drizzle-orm';
-import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, pgEnum, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+
+export const householdRoleEnum = pgEnum('household_role', ['owner', 'member']);
+
+export const household = pgTable('household', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	inviteCode: text('invite_code'),
+	inviteExpiresAt: timestamp('invite_expires_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow()
+});
 
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),
@@ -7,6 +18,8 @@ export const user = pgTable('user', {
 	email: text('email').notNull().unique(),
 	emailVerified: boolean('email_verified').default(false).notNull(),
 	image: text('image'),
+	householdId: text('household_id').references(() => household.id),
+	householdRole: householdRoleEnum('household_role'),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at')
 		.defaultNow()
