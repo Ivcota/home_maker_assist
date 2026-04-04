@@ -5,50 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1774711601324,
-      "tag": "0000_talented_captain_britain",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1774714809803,
-      "tag": "0001_mushy_arclight",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1774731299895,
-      "tag": "0002_flimsy_the_twelve",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1774801106829,
-      "tag": "0003_optimal_nightshade",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1774808396583,
-      "tag": "0004_windy_quasimodo",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1774825566879,
-      "tag": "0005_canonical_ingredient",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1775337292246,
-      "tag": "0006_yummy_loners",
+      "when": 1775337961774,
+      "tag": "0000_plain_storm",
       "breakpoints": true
     }
   ]
