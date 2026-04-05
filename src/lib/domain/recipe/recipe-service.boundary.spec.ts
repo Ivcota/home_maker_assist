@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS "user" (
   "image" text,
   "household_id" text REFERENCES "household"("id"),
   "household_role" text,
+  "complementary" boolean DEFAULT false NOT NULL,
   "created_at" timestamp DEFAULT now() NOT NULL,
   "updated_at" timestamp DEFAULT now() NOT NULL
 );

@@ -8,6 +8,11 @@ import {
 
 const { mockExtractItems } = vi.hoisted(() => ({ mockExtractItems: vi.fn() }));
 
+vi.mock('$lib/domain/subscription/use-cases.js', async () => {
+	const { Effect } = await import('effect');
+	return { checkFeatureAccess: () => Effect.succeed(undefined) };
+});
+
 vi.mock('$lib/server/runtime.js', async () => {
 	const { Effect } = await import('effect');
 	return {

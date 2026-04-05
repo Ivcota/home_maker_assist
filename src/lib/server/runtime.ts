@@ -8,6 +8,7 @@ import { DrizzleAICanonicalIngredientResolver } from '$lib/infrastructure/drizzl
 import { AIRecipeScannerLive } from '$lib/infrastructure/ai-recipe-scanner.js';
 import { AIReceiptScannerLive } from '$lib/infrastructure/ai-receipt-scanner.js';
 import { DrizzleHouseholdRepository } from '$lib/infrastructure/drizzle-household-repository.js';
+import { DrizzleSubscriptionRepository } from '$lib/infrastructure/drizzle-subscription-repository.js';
 import { DatabaseLive } from '$lib/infrastructure/database.js';
 
 const AppLive = Layer.mergeAll(
@@ -18,7 +19,8 @@ const AppLive = Layer.mergeAll(
 	DrizzleAICanonicalIngredientResolver,
 	AIRecipeScannerLive,
 	AIReceiptScannerLive,
-	DrizzleHouseholdRepository
+	DrizzleHouseholdRepository,
+	DrizzleSubscriptionRepository
 ).pipe(
 	Layer.provide(DatabaseLive),
 	Layer.provide(dev ? Logger.pretty : Logger.json)
