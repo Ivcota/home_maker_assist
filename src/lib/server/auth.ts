@@ -12,6 +12,22 @@ export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, { provider: 'pg' }),
+	user: {
+		additionalFields: {
+			householdId: {
+				type: 'string',
+				fieldName: 'household_id',
+				required: false,
+				returned: true
+			},
+			householdRole: {
+				type: 'string',
+				fieldName: 'household_role',
+				required: false,
+				returned: true
+			}
+		}
+	},
 	emailAndPassword: {
 		enabled: true,
 		sendResetPassword: async ({ user, url }) => {
