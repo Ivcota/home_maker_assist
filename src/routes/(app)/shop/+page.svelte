@@ -192,7 +192,7 @@
 
 	<!-- Done shopping button -->
 	{#if hasCheckedItems}
-		<div class="fixed bottom-16 left-0 right-0 flex justify-center px-6 pb-5">
+		<div class="fixed bottom-16 left-0 right-0 flex justify-center px-6 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
 			<form method="POST" action="?/completeShopping" use:enhance class="w-full max-w-5xl">
 				<button
 					type="submit"

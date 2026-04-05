@@ -293,7 +293,7 @@
 
 <!-- Toast notifications -->
 {#if toasts.length > 0}
-	<div class="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2">
+	<div class="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2 mb-[env(safe-area-inset-bottom)]">
 		{#each toasts as toast (toast.id)}
 			{@const undoItem = toast.data as FoodItem | undefined}
 			<div
@@ -909,7 +909,7 @@
 		type="button"
 		onclick={() => openSheet()}
 		aria-label="Add items to inventory"
-		class="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#c4a46a] px-5 py-3 text-sm font-semibold text-[#1a1714] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:translate-x-[-50%] hover:bg-[#d4b87a] hover:shadow-xl active:translate-y-0 active:translate-x-[-50%]"
+		class="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#c4a46a] px-5 py-3 text-sm font-semibold text-[#1a1714] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:translate-x-[-50%] hover:bg-[#d4b87a] hover:shadow-xl active:translate-y-0 active:translate-x-[-50%]"
 	>
 		<svg
 			width="18"

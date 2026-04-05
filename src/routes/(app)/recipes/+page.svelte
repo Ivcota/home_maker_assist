@@ -284,7 +284,7 @@
 
 <!-- Toast notifications -->
 {#if toasts.length > 0}
-	<div class="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2">
+	<div class="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2 mb-[env(safe-area-inset-bottom)]">
 		{#each toasts as toast (toast.id)}
 			<div
 				class="flex items-center gap-3 rounded-xl border border-[#e8e2d9] bg-white px-4 py-3 shadow-lg"
