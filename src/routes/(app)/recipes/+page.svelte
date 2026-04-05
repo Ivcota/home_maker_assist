@@ -462,7 +462,7 @@
 								name="name"
 								bind:value={batchRecipe.name}
 								required
-								class="w-full rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
+								class="w-full rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-base text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
 							/>
 						</div>
 						{#if duplicateName}
@@ -520,7 +520,7 @@
 						name="name"
 						bind:value={editName}
 						required
-						class="w-full rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
+						class="w-full rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-base text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
 					/>
 				</div>
 				{@render ingredientEditor(editIngredients, addEditIngredient, removeEditIngredient)}
@@ -780,7 +780,7 @@
 						<input
 							bind:value={ing.name}
 							placeholder="Ingredient name"
-							class="min-w-0 flex-1 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
+							class="min-w-0 flex-1 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-2 text-base text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
 						/>
 						<button
 							type="button"
@@ -806,11 +806,11 @@
 							min="0.01"
 							step="any"
 							placeholder="qty"
-							class="w-20 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-1.5 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
+							class="w-20 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-3 py-1.5 text-base text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
 						/>
 						<select
 							bind:value={ing.quantity.unit}
-							class="flex-1 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-2 py-1.5 text-sm text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
+							class="flex-1 rounded-xl border border-[#e8e2d9] bg-[#faf8f5] px-2 py-1.5 text-base text-[#2c2416] focus:border-[#5c4a2a] focus:outline-none"
 						>
 							<optgroup label="Count">
 								<option value="count">count</option>

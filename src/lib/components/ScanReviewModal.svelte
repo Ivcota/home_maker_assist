@@ -145,7 +145,7 @@
 									id="review-name-{item.localId}"
 									type="text"
 									bind:value={item.name}
-									class="min-w-24 rounded border border-[#ddd6cc] bg-white px-2 py-1 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-1 focus:ring-[#c4a46a33]"
+									class="min-w-24 rounded border border-[#ddd6cc] bg-white px-2 py-1 text-base text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-1 focus:ring-[#c4a46a33]"
 									aria-label="Name"
 								/>
 							</div>
@@ -159,7 +159,7 @@
 								<select
 									id="review-storage-{item.localId}"
 									bind:value={item.storageLocation}
-									class="rounded border border-[#ddd6cc] bg-white px-2 py-1 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a]"
+									class="rounded border border-[#ddd6cc] bg-white px-2 py-1 text-base text-[#1a1714] outline-none focus:border-[#c4a46a]"
 									aria-label="Storage location"
 								>
 									<option value="pantry">Pantry</option>
@@ -177,7 +177,7 @@
 									bind:value={item.quantityValue}
 									min="0.01"
 									step="any"
-									class="w-16 rounded border border-[#ddd6cc] bg-white px-2 py-1 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a]"
+									class="w-16 rounded border border-[#ddd6cc] bg-white px-2 py-1 text-base text-[#1a1714] outline-none focus:border-[#c4a46a]"
 									aria-label="Quantity"
 								/>
 							</div>
@@ -191,7 +191,7 @@
 								<select
 									id="review-unit-{item.localId}"
 									bind:value={item.quantityUnit}
-									class="rounded border border-[#ddd6cc] bg-white px-2 py-1 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a]"
+									class="rounded border border-[#ddd6cc] bg-white px-2 py-1 text-base text-[#1a1714] outline-none focus:border-[#c4a46a]"
 									aria-label="Unit"
 								>
 									<optgroup label="Count">
@@ -229,7 +229,7 @@
 									id="review-expiry-{item.localId}"
 									type="date"
 									bind:value={item.expirationDate}
-									class="rounded border border-[#ddd6cc] bg-white px-2 py-1 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a]"
+									class="rounded border border-[#ddd6cc] bg-white px-2 py-1 text-base text-[#1a1714] outline-none focus:border-[#c4a46a]"
 									aria-label="Expiration date"
 								/>
 							</div>

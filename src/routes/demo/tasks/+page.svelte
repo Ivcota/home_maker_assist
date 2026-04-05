@@ -153,7 +153,7 @@
 							name="title"
 							required
 							placeholder="What needs doing?"
-							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						/>
 					</div>
 					<div class="flex w-24 flex-col gap-1.5">
@@ -164,7 +164,7 @@
 							name="priority"
 							value="1"
 							min="1"
-							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						/>
 					</div>
 				</div>

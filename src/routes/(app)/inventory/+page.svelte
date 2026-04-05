@@ -689,7 +689,7 @@
 											name="name"
 											value={item.name}
 											required
-											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-base text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 										/>
 									</div>
 
@@ -702,7 +702,7 @@
 												id="edit-loc-{item.id}"
 												name="storageLocation"
 												value={item.storageLocation}
-												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-base text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 											>
 												<option value="pantry">Pantry</option>
 												<option value="fridge">Fridge</option>
@@ -718,7 +718,7 @@
 												id="edit-unit-{item.id}"
 												name="quantityUnit"
 												value={item.quantity.unit}
-												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+												class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-base text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 											>
 												<optgroup label="Count">
 													<option value="count">count</option>
@@ -757,7 +757,7 @@
 											min="0.01"
 											step="any"
 											value={item.quantity.value}
-											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-base text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 										/>
 									</div>
 
@@ -770,7 +770,7 @@
 											type="date"
 											name="expirationDate"
 											value={toDateInputValue(item.expirationDate)}
-											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-sm text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+											class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-2 text-base text-[#1a1714] outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 										/>
 									</div>
 
@@ -1137,7 +1137,7 @@
 						bind:value={addName}
 						required
 						placeholder="e.g. Milk, Eggs, Pasta"
-						class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+						class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 					/>
 				</div>
 
@@ -1151,7 +1151,7 @@
 							id="sheet-storageLocation"
 							name="storageLocation"
 							value={addStorageLocation}
-							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						>
 							<option value="pantry">Pantry</option>
 							<option value="fridge">Fridge</option>
@@ -1166,7 +1166,7 @@
 							id="sheet-quantityUnit"
 							name="quantityUnit"
 							bind:value={addQuantityUnit}
-							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+							class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 						>
 							<optgroup label="Count">
 								<option value="count">count</option>
@@ -1206,7 +1206,7 @@
 						min="0.01"
 						step="any"
 						bind:value={addQuantityValue}
-						class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+						class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 					/>
 				</div>
 
@@ -1220,7 +1220,7 @@
 						type="date"
 						name="expirationDate"
 						bind:value={addExpirationDate}
-						class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+						class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 					/>
 				</div>
 

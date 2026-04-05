@@ -223,7 +223,7 @@
 					type="text"
 					bind:value={newTask}
 					placeholder="What needs doing?"
-					class="flex-1 rounded-lg border border-[#c4a46a26] bg-[#211f1b] px-4 py-3 text-sm text-[#e8ddd0] transition-all duration-200 outline-none placeholder:tracking-wide placeholder:text-[#6b6560] focus:border-[#c4a46a66] focus:shadow-[0_0_0_3px_rgba(196,164,106,0.08)]"
+					class="flex-1 rounded-lg border border-[#c4a46a26] bg-[#211f1b] px-4 py-3 text-base text-[#e8ddd0] transition-all duration-200 outline-none placeholder:tracking-wide placeholder:text-[#6b6560] focus:border-[#c4a46a66] focus:shadow-[0_0_0_3px_rgba(196,164,106,0.08)]"
 					onkeydown={(e) => {
 						if (e.key === 'Enter') handleAdd();
 					}}

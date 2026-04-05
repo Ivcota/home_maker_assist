@@ -107,7 +107,7 @@
 					bind:value={profileName}
 					placeholder="Your name"
 					required
-					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 				/>
 			</div>
 
@@ -164,7 +164,7 @@
 					type="password"
 					placeholder="••••••••"
 					required
-					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 				/>
 			</div>
 
@@ -176,7 +176,7 @@
 					type="password"
 					placeholder="••••••••"
 					required
-					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 				/>
 			</div>
 
@@ -190,7 +190,7 @@
 					type="password"
 					placeholder="••••••••"
 					required
-					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-sm text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+					class="rounded-lg border border-[#ddd6cc] bg-white px-3.5 py-2.5 text-base text-[#1a1714] shadow-sm transition-all duration-200 outline-none placeholder:text-[#b5aea4] focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 				/>
 			</div>
 
@@ -239,7 +239,7 @@
 								type="text"
 								bind:value={householdName}
 								required
-								class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-1.5 text-sm text-[#1a1714] shadow-sm outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
+								class="rounded-lg border border-[#ddd6cc] bg-white px-3 py-1.5 text-base text-[#1a1714] shadow-sm outline-none focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a33]"
 							/>
 							<button
 								type="submit"
@@ -357,7 +357,7 @@
 								type="text"
 								readonly
 								value={inviteLink}
-								class="flex-1 rounded-lg border border-[#ddd6cc] bg-[#f8f6f3] px-3.5 py-2.5 text-sm text-[#6b6560] outline-none"
+								class="flex-1 rounded-lg border border-[#ddd6cc] bg-[#f8f6f3] px-3.5 py-2.5 text-base text-[#6b6560] outline-none"
 							/>
 							<button
 								type="button"
