@@ -23,7 +23,7 @@
 <div class="flex min-h-screen flex-col bg-[#f8f6f3] font-[Nunito_Sans,sans-serif]">
 	<AppHeader user={data.user} />
 	{@render children()}
-	<nav class="fixed right-0 bottom-0 left-0 z-40 border-t border-[#e8e2d9] bg-white pb-[env(safe-area-inset-bottom)]">
+	<nav class="fixed right-0 bottom-0 left-0 z-40 border-t border-[#e8e2d9] bg-white pb-[calc(env(safe-area-inset-bottom)/2)]">
 		<div class="mx-auto flex w-[85%] max-w-5xl">
 			{#each navItems as item}
 				{@const active = page.url.pathname.startsWith(item.href)}
