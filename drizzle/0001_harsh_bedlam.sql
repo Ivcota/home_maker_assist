@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "complementary" boolean DEFAULT false NOT NULL;

@@ -8,6 +8,11 @@ import {
 
 const { mockExtractRecipes } = vi.hoisted(() => ({ mockExtractRecipes: vi.fn() }));
 
+vi.mock('$lib/domain/subscription/use-cases.js', async () => {
+	const { Effect } = await import('effect');
+	return { checkFeatureAccess: () => Effect.succeed(undefined) };
+});
+
 vi.mock('$lib/infrastructure/ai-recipe-scanner.js', async () => {
 	const { Layer } = await import('effect');
 	const { RecipeScanner } = await import('$lib/domain/recipe/recipe-scanner.js');

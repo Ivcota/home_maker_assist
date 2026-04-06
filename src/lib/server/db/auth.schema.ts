@@ -20,6 +20,7 @@ export const user = pgTable('user', {
 	image: text('image'),
 	householdId: text('household_id').references(() => household.id),
 	householdRole: householdRoleEnum('household_role'),
+	complementary: boolean('complementary').default(false).notNull(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at')
 		.defaultNow()

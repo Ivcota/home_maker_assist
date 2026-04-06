@@ -5,10 +5,21 @@ import { withRequestLogging } from '$lib/server/logging';
 import { appRuntime } from '$lib/server/runtime.js';
 import { extractItemsFromReceipt } from '$lib/domain/receipt/use-cases.js';
 import { AIFoodPhotoScannerLive } from '$lib/infrastructure/ai-food-photo-scanner.js';
+import { checkFeatureAccess } from '$lib/domain/subscription/use-cases.js';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) {
 		error(401, 'Unauthorized');
+	}
+
+	const accessResult = await appRuntime.runPromise(
+		checkFeatureAccess(locals.user.id, locals.householdId ?? null, 'scan').pipe(
+			Effect.map(() => 'granted' as const),
+			Effect.catchTag('SubscriptionRequiredError', () => Effect.succeed('denied' as const))
+		)
+	);
+	if (accessResult === 'denied') {
+		error(403, 'This feature requires an active subscription.');
 	}
 
 	const formData = await request.formData();

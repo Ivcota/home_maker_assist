@@ -16,12 +16,23 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		event.locals.session = session.session;
 		event.locals.user = session.user;
 
+		const fullUser = session.user as Record<string, unknown>;
+
 		// better-auth already fetches the full user row; grab householdId
 		// from it instead of issuing a second DB query on every request.
-		const householdId = (session.user as Record<string, unknown>).householdId;
+		const householdId = fullUser.householdId;
 		if (typeof householdId === 'string' && householdId) {
 			event.locals.householdId = householdId;
 		}
+
+		const complementary = fullUser.complementary === true;
+		event.locals.subscription = {
+			tier: complementary ? 'solo' : 'free',
+			status: 'active',
+			complementary
+		};
+	} else {
+		event.locals.subscription = { tier: 'free', status: 'active', complementary: false };
 	}
 
 	return svelteKitHandler({ event, resolve, auth, building });
